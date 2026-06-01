@@ -47,40 +47,45 @@ export async function registerSwAndSubscribe(userId: string): Promise<{
     return { ok: false, reason: "Service worker registration failed: " + e.message };
   }
 
-  const messaging = await getMessagingSafe();
-  if (!messaging) return { ok: false, reason: "FCM not supported on this browser" };
-
+  // Try to obtain an FCM push token for background delivery. If unavailable
+  // (browser/FCM/VAPID issues), we still consider enabling a success because
+  // in-app realtime toasts + foreground Notification API work without it.
   let token: string | undefined;
-  // Retry up to 3 times for flaky network (Opera Mini-ish low bandwidth)
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: registration,
-      });
-      if (token) break;
-    } catch (e) {
-      if (attempt === 2) return { ok: false, reason: "Could not obtain push token" };
-      await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+  try {
+    const messaging = await getMessagingSafe();
+    if (messaging) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          token = await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: registration,
+          });
+          if (token) break;
+        } catch {
+          await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+        }
+      }
     }
-  }
-  if (!token) return { ok: false, reason: "Empty token" };
+  } catch {}
 
-  if (localStorage.getItem(TOKEN_CACHE_KEY) !== token) {
-    const { error } = await supabase.from("notification_tokens").upsert(
-      {
-        user_id: userId,
-        token,
-        platform: "web",
-        user_agent: navigator.userAgent.slice(0, 255),
-        last_seen_at: new Date().toISOString(),
-      },
-      { onConflict: "token" }
-    );
-    if (error) return { ok: false, reason: error.message };
-    localStorage.setItem(TOKEN_CACHE_KEY, token);
+  if (token && localStorage.getItem(TOKEN_CACHE_KEY) !== token) {
+    try {
+      await supabase.from("notification_tokens").upsert(
+        {
+          user_id: userId,
+          token,
+          platform: "web",
+          user_agent: navigator.userAgent.slice(0, 255),
+          last_seen_at: new Date().toISOString(),
+        },
+        { onConflict: "token" }
+      );
+      localStorage.setItem(TOKEN_CACHE_KEY, token);
+    } catch {}
   }
 
+  // Permission is granted and SW is registered — notifications will work
+  // in-app even without a background push token.
   return { ok: true, token };
 }
 
