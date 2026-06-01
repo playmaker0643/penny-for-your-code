@@ -19,7 +19,6 @@ const TABS: { key: "all" | NotificationCategory; label: string }[] = [
   { key: "new_lesson", label: "Lessons" },
   { key: "challenge", label: "Challenges" },
   { key: "announcement", label: "News" },
-  { key: "security", label: "Security" },
 ];
 
 export function NotificationCenter() {
