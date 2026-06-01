@@ -261,10 +261,9 @@ const StudentChallenge = () => {
     if (ids.length === 0) return;
     const { data } = await supabase
       .from("challenge_questions")
-      .select("id, question_text, question_type, options, correct_answer")
+      .select("id, question_text, question_type, options")
       .in("id", ids);
     if (!data) return;
-    // Maintain the order from ids array
     const map = new Map(data.map(q => [q.id, q]));
     const ordered = ids.map(id => map.get(id)).filter(Boolean) as any[];
     setQuestions(ordered.map(q => ({
@@ -276,7 +275,7 @@ const StudentChallenge = () => {
   const startAIGame = useCallback(async () => {
     const { data } = await supabase
       .from("challenge_questions")
-      .select("id, question_text, question_type, options, correct_answer")
+      .select("id, question_text, question_type, options")
       .eq("course_id", selectedCourseId);
 
     if (!data || data.length === 0) {
