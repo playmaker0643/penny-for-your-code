@@ -248,7 +248,7 @@ const StudentChallenge = () => {
           setMyScore(0);
           setOpponentScore(existingMatch.player_one_score || 0);
           setSelectedAnswer("");
-          setAnswered(false);
+          setAnswered(false); setLastCorrect(null);
           setWinner(null);
           setStep("gameplay");
         }
@@ -295,7 +295,7 @@ const StudentChallenge = () => {
     setOpponentScore(0);
     setOpponentCurrentIndex(0);
     setSelectedAnswer("");
-    setAnswered(false);
+    setAnswered(false); setLastCorrect(null);
     setWinner(null);
     setMatchId(null);
     setStep("gameplay");
@@ -412,7 +412,7 @@ const StudentChallenge = () => {
           setMyScore(0);
           setOpponentScore(0);
           setSelectedAnswer("");
-          setAnswered(false);
+          setAnswered(false); setLastCorrect(null);
           setWinner(null);
           setStep("gameplay");
         } else if (updated.status === "rejected") {
@@ -477,7 +477,7 @@ const StudentChallenge = () => {
       setMyScore(0);
         setOpponentScore(0);
       setSelectedAnswer("");
-      setAnswered(false);
+      setAnswered(false); setLastCorrect(null);
       setWinner(null);
       setStep("gameplay");
     } else {
@@ -557,7 +557,7 @@ const StudentChallenge = () => {
     }
     setCurrentQ(c => c + 1);
     setSelectedAnswer("");
-    setAnswered(false);
+    setAnswered(false); setLastCorrect(null);
   };
 
   const resetGame = () => {
