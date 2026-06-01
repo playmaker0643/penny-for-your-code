@@ -3,7 +3,7 @@ export interface ChallengeQuestion {
   question_text: string;
   question_type: string;
   options: string[];
-  correct_answer: string;
+  correct_answer?: string;
 }
 
 export const getInitials = (name: string) => {
