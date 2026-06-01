@@ -825,9 +825,9 @@ const StudentChallenge = () => {
                 <label key={i}
                   className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                     answered
-                      ? opt.toLowerCase().trim() === q.correct_answer.toLowerCase().trim()
-                        ? "border-green-500 bg-green-500/10"
-                        : selectedAnswer === opt ? "border-destructive bg-destructive/10" : "border-border/30 bg-card"
+                      ? selectedAnswer === opt
+                        ? (lastCorrect ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10")
+                        : "border-border/30 bg-card"
                       : selectedAnswer === opt ? "border-primary bg-primary/10" : "border-border/30 bg-card hover:border-primary/40"
                   }`}>
                   <RadioGroupItem value={opt} disabled={answered} />
@@ -841,8 +841,8 @@ const StudentChallenge = () => {
                 placeholder="Type your answer..." className="bg-muted border-border/50"
                 disabled={answered} inputMode="text" autoComplete="off" />
               {answered && (
-                <p className={`text-xs font-mono ${selectedAnswer.toLowerCase().trim() === q.correct_answer.toLowerCase().trim() ? "text-green-500" : "text-destructive"}`}>
-                  Correct answer: {q.correct_answer}
+                <p className={`text-xs font-mono ${lastCorrect ? "text-green-500" : "text-destructive"}`}>
+                  {lastCorrect ? "Correct!" : "Incorrect"}
                 </p>
               )}
             </div>
