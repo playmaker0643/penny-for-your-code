@@ -1,29 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Click Counter" },
+      { name: "description", content: "A tiny click counter — the cheapest app you'll ever ship." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const [count, setCount] = useState(0);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-6">
+      <h1 className="text-5xl font-bold tracking-tight text-foreground">
+        {count}
+      </h1>
+      <button
+        onClick={() => setCount((c) => c + 1)}
+        className="rounded-full bg-primary px-8 py-3 text-sm font-medium text-primary-foreground transition-transform hover:scale-105 active:scale-95"
+      >
+        Click me
+      </button>
+      <p className="text-sm text-muted-foreground">Built for ~1 credit.</p>
+    </main>
   );
 }
