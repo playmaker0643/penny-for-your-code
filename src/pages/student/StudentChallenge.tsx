@@ -496,9 +496,11 @@ const StudentChallenge = () => {
   const handleAnswer = async () => {
     if (!selectedAnswer) return;
     const q = questions[currentQ];
-    const correct = selectedAnswer.toLowerCase().trim() === q.correct_answer.toLowerCase().trim();
-    const newScore = correct ? myScore + 1 : myScore;
-    if (correct) setMyScore(newScore);
+    const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
+    const isCorrect = !!correct;
+    setLastCorrect(isCorrect);
+    const newScore = isCorrect ? myScore + 1 : myScore;
+    if (isCorrect) setMyScore(newScore);
     setAnswered(true);
 
     // AI mode: simulate opponent
