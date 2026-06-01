@@ -1,0 +1,1 @@
+ALTER TABLE public.polls ALTER COLUMN sender_id DROP NOT NULL;

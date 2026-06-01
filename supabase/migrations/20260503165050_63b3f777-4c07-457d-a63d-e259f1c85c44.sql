@@ -1,0 +1,1 @@
+ALTER TABLE public.calls ADD COLUMN IF NOT EXISTS duration_seconds integer;
