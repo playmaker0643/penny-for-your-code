@@ -98,7 +98,7 @@ function ExamRunner({ exam, userId, onClose }: { exam: any; userId: string; onCl
   const currentPart = parts[partIdx];
 
   useEffect(() => {
-    supabase.from("exam_questions").select("*").eq("exam_id", exam.id).order("order_index").then(({ data }) => {
+    supabase.from("exam_questions").select("id, exam_id, question_text, options, order_index, part").eq("exam_id", exam.id).order("order_index").then(({ data }) => {
       setQuestions(data || []);
     });
   }, [exam.id]);
