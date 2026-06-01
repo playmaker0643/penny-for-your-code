@@ -99,6 +99,12 @@ export async function startForegroundListener(onIncoming?: (payload: any) => voi
   const unsub = onMessage(messaging, (payload) => {
     onIncoming?.(payload);
     try {
+      // Only popup when app is in background. Foreground (tab visible) stays
+      // silent — the bell/history still updates via realtime.
+      const inBackground =
+        typeof document !== "undefined" &&
+        (document.hidden || document.visibilityState !== "visible");
+      if (!inBackground) return;
       const d = payload.data || {};
       const title = (d as any).title || payload.notification?.title || "Notification";
       const body = (d as any).body || payload.notification?.body || "";

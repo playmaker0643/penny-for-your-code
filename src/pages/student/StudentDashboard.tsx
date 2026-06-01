@@ -101,9 +101,17 @@ const StudentDashboard = () => {
                   onClick={() => {
                     if (!isLocked) navigate(`/student/courses/${course.id}`);
                   }}
-                  className={`cyber-card rounded-xl p-4 transition-colors ${isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary/40 active:scale-[0.98]"}`}
+                  className={`cyber-card rounded-xl overflow-hidden transition-colors ${isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary/40 active:scale-[0.98]"}`}
                 >
-                  <div className="flex items-center gap-3">
+                  {course.thumbnail_url && (
+                    <img
+                      src={course.thumbnail_url}
+                      alt={course.title}
+                      loading="lazy"
+                      className="w-full h-32 object-cover"
+                    />
+                  )}
+                  <div className="flex items-center gap-3 p-4">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       {isLocked ? (
                         <Lock className="h-5 w-5 text-destructive" />

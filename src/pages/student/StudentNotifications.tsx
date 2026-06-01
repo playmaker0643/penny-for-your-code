@@ -16,7 +16,7 @@ import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 
 const CATS: NotificationCategory[] = [
-  "new_lesson","challenge","security","announcement","achievement","live_class","system",
+  "new_lesson","challenge","announcement","achievement","live_class","system",
 ];
 
 export default function StudentNotifications() {

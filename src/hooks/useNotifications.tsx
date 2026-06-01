@@ -61,16 +61,34 @@ export function useNotifications() {
             const n = payload.new;
             setItems((prev) => [n, ...prev]);
             await idbPut([n]);
-            playNotificationSound();
-            vibrate();
-            // MiniPay-style popup
-            toast(n.title || "New notification", {
-              description: n.body || undefined,
-              duration: 5000,
-              action: n.link_url
-                ? { label: "Open", onClick: () => { window.location.href = n.link_url; } }
-                : undefined,
-            });
+            // Only show a popup/sound when the app is in the background
+            // (tab hidden, minimized, or another tab focused). When the user
+            // is actively inside the app, the notification is silently added
+            // to the bell/history without interrupting them.
+            const inBackground =
+              typeof document !== "undefined" &&
+              (document.hidden || document.visibilityState !== "visible");
+            if (inBackground) {
+              playNotificationSound();
+              vibrate();
+              toast(n.title || "New notification", {
+                description: n.body || undefined,
+                duration: 5000,
+                action: n.link_url
+                  ? { label: "Open", onClick: () => { window.location.href = n.link_url; } }
+                  : undefined,
+              });
+              try {
+                if ("Notification" in window && Notification.permission === "granted") {
+                  new Notification(n.title || "Notification", {
+                    body: n.body || "",
+                    icon: n.image_url || "/favicon.ico",
+                    tag: n.category || "system",
+                    data: { link: n.link_url || "/" },
+                  });
+                }
+              } catch {}
+            }
           } else if (payload.eventType === "UPDATE") {
             const n = payload.new;
             setItems((prev) => prev.map((p) => (p.id === n.id ? n : p)));
