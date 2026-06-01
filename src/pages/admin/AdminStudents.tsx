@@ -44,9 +44,9 @@ const AdminStudents = () => {
     queryFn: async () => {
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "student");
       if (!roles || roles.length === 0) return [];
-      const userIds = roles.map((r) => r.user_id);
-      const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds).order("created_at", { ascending: true });
-      return (profiles || []) as StudentProfile[];
+      const studentIds = new Set(roles.map((r) => r.user_id));
+      const { data: profiles } = await supabase.rpc("admin_list_profiles");
+      return ((profiles || []) as StudentProfile[]).filter((p) => studentIds.has(p.user_id)).sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
     },
   });
 
