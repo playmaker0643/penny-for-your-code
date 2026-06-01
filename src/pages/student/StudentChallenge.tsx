@@ -41,6 +41,7 @@ const StudentChallenge = () => {
   const [opponentCurrentIndex, setOpponentCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [answered, setAnswered] = useState(false);
+  const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
   const [winner, setWinner] = useState<"me" | "opponent" | "draw" | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
   const matchChannelRef = useRef<any>(null);
