@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -62,6 +63,14 @@ export function useNotifications() {
             await idbPut([n]);
             playNotificationSound();
             vibrate();
+            // MiniPay-style popup
+            toast(n.title || "New notification", {
+              description: n.body || undefined,
+              duration: 5000,
+              action: n.link_url
+                ? { label: "Open", onClick: () => { window.location.href = n.link_url; } }
+                : undefined,
+            });
           } else if (payload.eventType === "UPDATE") {
             const n = payload.new;
             setItems((prev) => prev.map((p) => (p.id === n.id ? n : p)));

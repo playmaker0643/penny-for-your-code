@@ -1608,6 +1608,7 @@ export type Database = {
         Args: { _chat_id: string; _user_id: string }
         Returns: boolean
       }
+      start_admin_chat: { Args: never; Returns: string }
     }
     Enums: {
       app_role: "admin" | "student"

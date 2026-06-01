@@ -53,50 +53,12 @@ const StudentSupport = () => {
     if (!user || openingChat) return;
     setOpeningChat(true);
     try {
-      const { data: adminId, error: adminErr } = await supabase.rpc("get_one_admin");
-      if (adminErr) throw adminErr;
-      if (!adminId) {
+      const { data: chatId, error } = await supabase.rpc("start_admin_chat");
+      if (error) throw error;
+      if (!chatId) {
         toast.error("No admin is available right now. Please try again later.");
         return;
       }
-
-      // Find an existing 1:1 chat between this student and the admin
-      const { data: myMemberships } = await supabase
-        .from("chat_members")
-        .select("chat_id, chats!inner(is_group)")
-        .eq("user_id", user.id);
-      const candidateChatIds = (myMemberships || [])
-        .filter((m: any) => m.chats && m.chats.is_group === false)
-        .map((m: any) => m.chat_id);
-
-      let chatId: string | null = null;
-      if (candidateChatIds.length > 0) {
-        const { data: adminMembership } = await supabase
-          .from("chat_members")
-          .select("chat_id")
-          .eq("user_id", adminId)
-          .in("chat_id", candidateChatIds)
-          .maybeSingle();
-        chatId = adminMembership?.chat_id ?? null;
-      }
-
-      if (!chatId) {
-        const { data: newChat, error: chatErr } = await supabase
-          .from("chats")
-          .insert({ is_group: false, created_by: user.id })
-          .select("id")
-          .single();
-        if (chatErr || !newChat) throw chatErr;
-        chatId = newChat.id;
-        const { error: memErr } = await supabase
-          .from("chat_members")
-          .insert([
-            { chat_id: chatId, user_id: user.id },
-            { chat_id: chatId, user_id: adminId },
-          ]);
-        if (memErr) throw memErr;
-      }
-
       navigate(`/student/chat/${chatId}`);
     } catch (e: any) {
       console.error("chat-with-admin error", e);
