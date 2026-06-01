@@ -62,8 +62,8 @@ const StudentChallenge = () => {
   const { data: myFullProfile } = useQuery({
     queryKey: ["my-full-profile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("country").eq("user_id", user!.id).single();
-      return data;
+      const { data } = await supabase.rpc("get_my_profile");
+      return Array.isArray(data) && data.length > 0 ? data[0] : null;
     },
     enabled: !!user,
   });
