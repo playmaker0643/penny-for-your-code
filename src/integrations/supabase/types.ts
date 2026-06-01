@@ -1595,8 +1595,111 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_challenge_questions: {
+        Args: { _course_id: string }
+        Returns: {
+          correct_answer: string
+          course_id: string
+          created_at: string
+          id: string
+          options: string[] | null
+          question_text: string
+          question_type: Database["public"]["Enums"]["challenge_question_type"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "challenge_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_list_exam_questions: {
+        Args: { _exam_id: string }
+        Returns: {
+          correct_answer: string | null
+          created_at: string
+          exam_id: string
+          id: string
+          options: string[] | null
+          order_index: number
+          part: string
+          question_text: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "exam_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_list_profiles: {
+        Args: never
+        Returns: {
+          account_locked: boolean
+          address: string | null
+          avatar_url: string | null
+          country: string | null
+          created_at: string
+          date_of_birth: string | null
+          first_name: string | null
+          full_name: string
+          id: string
+          locked_at: string | null
+          other_names: string | null
+          phone: string | null
+          registration_number: string | null
+          second_name: string | null
+          state: string | null
+          town: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      check_challenge_answer: {
+        Args: { _answer: string; _qid: string }
+        Returns: boolean
+      }
       find_user_by_email_or_reg: { Args: { _input: string }; Returns: string }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          account_locked: boolean
+          address: string | null
+          avatar_url: string | null
+          country: string | null
+          created_at: string
+          date_of_birth: string | null
+          first_name: string | null
+          full_name: string
+          id: string
+          locked_at: string | null
+          other_names: string | null
+          phone: string | null
+          registration_number: string | null
+          second_name: string | null
+          state: string | null
+          town: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_one_admin: { Args: never; Returns: string }
+      grade_exam_obj_answers: {
+        Args: { _answers: Json; _exam_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

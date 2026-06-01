@@ -38,12 +38,8 @@ const AdminChallenges = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ["challenge-questions", selectedCourseId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("challenge_questions")
-        .select("*")
-        .eq("course_id", selectedCourseId)
-        .order("created_at", { ascending: false });
-      return data || [];
+      const { data } = await supabase.rpc("admin_list_challenge_questions", { _course_id: selectedCourseId });
+      return (data || []).filter((q: any) => q.course_id === selectedCourseId);
     },
     enabled: !!selectedCourseId,
   });

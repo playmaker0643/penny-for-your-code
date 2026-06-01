@@ -98,7 +98,7 @@ function ExamRunner({ exam, userId, onClose }: { exam: any; userId: string; onCl
   const currentPart = parts[partIdx];
 
   useEffect(() => {
-    supabase.from("exam_questions").select("*").eq("exam_id", exam.id).order("order_index").then(({ data }) => {
+    supabase.from("exam_questions").select("id, exam_id, question_text, options, order_index, part").eq("exam_id", exam.id).order("order_index").then(({ data }) => {
       setQuestions(data || []);
     });
   }, [exam.id]);
@@ -123,7 +123,8 @@ function ExamRunner({ exam, userId, onClose }: { exam: any; userId: string; onCl
   const finishPart = async () => {
     const newResults = { ...results };
     if (currentPart.type === "obj") {
-      const correct = partQuestions.filter((q) => objAnswers[q.id] === q.correct_answer).length;
+      const { data: correctCount } = await supabase.rpc("grade_exam_obj_answers", { _exam_id: exam.id, _answers: objAnswers as any });
+      const correct = Number(correctCount) || 0;
       const score = partQuestions.length > 0 ? Math.round((correct / partQuestions.length) * currentPart.percent) : 0;
       newResults.obj_score = score;
     }

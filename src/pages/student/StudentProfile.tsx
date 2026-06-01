@@ -29,12 +29,8 @@ const StudentProfile = () => {
     queryKey: ["student-full-profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("phone, country, state, town, date_of_birth, created_at, first_name, second_name, other_names, address")
-        .eq("user_id", user!.id)
-        .single();
-      return data;
+      const { data } = await supabase.rpc("get_my_profile");
+      return Array.isArray(data) && data.length > 0 ? data[0] : null;
     },
   });
 

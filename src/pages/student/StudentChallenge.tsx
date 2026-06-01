@@ -41,6 +41,7 @@ const StudentChallenge = () => {
   const [opponentCurrentIndex, setOpponentCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [answered, setAnswered] = useState(false);
+  const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
   const [winner, setWinner] = useState<"me" | "opponent" | "draw" | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
   const matchChannelRef = useRef<any>(null);
@@ -62,8 +63,8 @@ const StudentChallenge = () => {
   const { data: myFullProfile } = useQuery({
     queryKey: ["my-full-profile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("country").eq("user_id", user!.id).single();
-      return data;
+      const { data } = await supabase.rpc("get_my_profile");
+      return Array.isArray(data) && data.length > 0 ? data[0] : null;
     },
     enabled: !!user,
   });
@@ -247,7 +248,7 @@ const StudentChallenge = () => {
           setMyScore(0);
           setOpponentScore(existingMatch.player_one_score || 0);
           setSelectedAnswer("");
-          setAnswered(false);
+          setAnswered(false); setLastCorrect(null);
           setWinner(null);
           setStep("gameplay");
         }
@@ -261,10 +262,9 @@ const StudentChallenge = () => {
     if (ids.length === 0) return;
     const { data } = await supabase
       .from("challenge_questions")
-      .select("id, question_text, question_type, options, correct_answer")
+      .select("id, question_text, question_type, options")
       .in("id", ids);
     if (!data) return;
-    // Maintain the order from ids array
     const map = new Map(data.map(q => [q.id, q]));
     const ordered = ids.map(id => map.get(id)).filter(Boolean) as any[];
     setQuestions(ordered.map(q => ({
@@ -276,7 +276,7 @@ const StudentChallenge = () => {
   const startAIGame = useCallback(async () => {
     const { data } = await supabase
       .from("challenge_questions")
-      .select("id, question_text, question_type, options, correct_answer")
+      .select("id, question_text, question_type, options")
       .eq("course_id", selectedCourseId);
 
     if (!data || data.length === 0) {
@@ -295,7 +295,7 @@ const StudentChallenge = () => {
     setOpponentScore(0);
     setOpponentCurrentIndex(0);
     setSelectedAnswer("");
-    setAnswered(false);
+    setAnswered(false); setLastCorrect(null);
     setWinner(null);
     setMatchId(null);
     setStep("gameplay");
@@ -412,7 +412,7 @@ const StudentChallenge = () => {
           setMyScore(0);
           setOpponentScore(0);
           setSelectedAnswer("");
-          setAnswered(false);
+          setAnswered(false); setLastCorrect(null);
           setWinner(null);
           setStep("gameplay");
         } else if (updated.status === "rejected") {
@@ -477,7 +477,7 @@ const StudentChallenge = () => {
       setMyScore(0);
         setOpponentScore(0);
       setSelectedAnswer("");
-      setAnswered(false);
+      setAnswered(false); setLastCorrect(null);
       setWinner(null);
       setStep("gameplay");
     } else {
@@ -496,9 +496,11 @@ const StudentChallenge = () => {
   const handleAnswer = async () => {
     if (!selectedAnswer) return;
     const q = questions[currentQ];
-    const correct = selectedAnswer.toLowerCase().trim() === q.correct_answer.toLowerCase().trim();
-    const newScore = correct ? myScore + 1 : myScore;
-    if (correct) setMyScore(newScore);
+    const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
+    const isCorrect = !!correct;
+    setLastCorrect(isCorrect);
+    const newScore = isCorrect ? myScore + 1 : myScore;
+    if (isCorrect) setMyScore(newScore);
     setAnswered(true);
 
     // AI mode: simulate opponent
@@ -555,7 +557,7 @@ const StudentChallenge = () => {
     }
     setCurrentQ(c => c + 1);
     setSelectedAnswer("");
-    setAnswered(false);
+    setAnswered(false); setLastCorrect(null);
   };
 
   const resetGame = () => {
@@ -823,9 +825,9 @@ const StudentChallenge = () => {
                 <label key={i}
                   className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                     answered
-                      ? opt.toLowerCase().trim() === q.correct_answer.toLowerCase().trim()
-                        ? "border-green-500 bg-green-500/10"
-                        : selectedAnswer === opt ? "border-destructive bg-destructive/10" : "border-border/30 bg-card"
+                      ? selectedAnswer === opt
+                        ? (lastCorrect ? "border-green-500 bg-green-500/10" : "border-destructive bg-destructive/10")
+                        : "border-border/30 bg-card"
                       : selectedAnswer === opt ? "border-primary bg-primary/10" : "border-border/30 bg-card hover:border-primary/40"
                   }`}>
                   <RadioGroupItem value={opt} disabled={answered} />
@@ -839,8 +841,8 @@ const StudentChallenge = () => {
                 placeholder="Type your answer..." className="bg-muted border-border/50"
                 disabled={answered} inputMode="text" autoComplete="off" />
               {answered && (
-                <p className={`text-xs font-mono ${selectedAnswer.toLowerCase().trim() === q.correct_answer.toLowerCase().trim() ? "text-green-500" : "text-destructive"}`}>
-                  Correct answer: {q.correct_answer}
+                <p className={`text-xs font-mono ${lastCorrect ? "text-green-500" : "text-destructive"}`}>
+                  {lastCorrect ? "Correct!" : "Incorrect"}
                 </p>
               )}
             </div>

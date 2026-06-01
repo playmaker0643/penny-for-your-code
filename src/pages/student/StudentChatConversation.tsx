@@ -53,7 +53,7 @@ const StudentChatConversation = () => {
     queryFn: async () => {
       if (isDirect && directUserId) {
         const [{ data: prof }, { data: pres }, { data: roleRow }] = await Promise.all([
-          supabase.from("profiles").select("full_name, avatar_url, registration_number, country, state").eq("user_id", directUserId).maybeSingle(),
+          supabase.from("profiles").select("full_name, avatar_url, registration_number").eq("user_id", directUserId).maybeSingle(),
           supabase.from("user_presence").select("is_online, last_seen").eq("user_id", directUserId).maybeSingle(),
           supabase.from("user_roles").select("role").eq("user_id", directUserId).maybeSingle(),
         ]);
@@ -70,7 +70,7 @@ const StudentChatConversation = () => {
         const { data: members } = await supabase.from("chat_members").select("user_id").eq("chat_id", chatId!).neq("user_id", user!.id);
         if (members && members.length > 0) {
           const [{ data: prof }, { data: pres }] = await Promise.all([
-            supabase.from("profiles").select("full_name, avatar_url, registration_number, country, state").eq("user_id", members[0].user_id).single(),
+            supabase.from("profiles").select("full_name, avatar_url, registration_number").eq("user_id", members[0].user_id).single(),
             supabase.from("user_presence").select("is_online, last_seen").eq("user_id", members[0].user_id).single(),
           ]);
           return { ...data, otherProfile: prof, otherPresence: pres, otherUserId: members[0].user_id };
