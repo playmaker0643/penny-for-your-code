@@ -69,9 +69,27 @@ export default function StudentNotifications() {
     if (!user) return;
     setBusy(true);
     const res = await registerSwAndSubscribe(user.id);
-    setBusy(false); setPerm(notificationPermission());
+    setBusy(false); setPerm(notificationPermission()); await refreshDiag();
     if (res.ok) toast.success("Notifications enabled");
     else toast.error(res.reason || "Could not enable");
+  };
+
+  const retry = async () => {
+    if (!user) return;
+    setBusy(true);
+    try {
+      localStorage.removeItem("cb_fcm_token");
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) {
+          if ((r.active?.scriptURL || "").includes("firebase-messaging-sw.js")) await r.unregister();
+        }
+      }
+      const res = await registerSwAndSubscribe(user.id);
+      setPerm(notificationPermission()); await refreshDiag();
+      if (res.ok) toast.success("Re-registered successfully");
+      else toast.error(res.reason || "Re-registration failed");
+    } finally { setBusy(false); }
   };
 
   return (
