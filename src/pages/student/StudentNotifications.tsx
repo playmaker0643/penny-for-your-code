@@ -105,6 +105,26 @@ export default function StudentNotifications() {
 
         <PermissionPrompt />
 
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-sm">Push diagnostics</p>
+              <p className="text-xs text-muted-foreground">Status of this device's push connection.</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={retry} disabled={busy} className="gap-1">
+              <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} />
+              Re-register
+            </Button>
+          </div>
+          <ul className="text-sm space-y-1.5">
+            <StatusRow label="Browser supports push" ok={pushSupported()} />
+            <StatusRow label="Notification permission granted" ok={perm === "granted"} warn={perm === "default"} />
+            <StatusRow label="Service worker active" ok={diag.sw} />
+            <StatusRow label="FCM token cached locally" ok={diag.token} />
+            <StatusRow label="Token saved to server" ok={diag.dbToken} />
+          </ul>
+        </Card>
+
         <Card className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
