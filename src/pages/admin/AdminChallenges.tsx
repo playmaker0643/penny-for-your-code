@@ -216,6 +216,25 @@ Return ONLY the JSON array, no other text.`;
       const { error: insertErr } = await supabase.from("challenge_questions").insert(rows);
       if (insertErr) throw insertErr;
 
+      // Notify enrolled students of new challenges
+      try {
+        const { sendNotification } = await import("@/lib/notifications/api");
+        const { data: enrolled } = await supabase
+          .from("enrollments").select("user_id").eq("course_id", selectedCourseId);
+        const userIds = [...new Set((enrolled || []).map((e: any) => e.user_id))];
+        if (userIds.length) {
+          await sendNotification({
+            target: "users",
+            user_ids: userIds,
+            category: "challenge",
+            title: `${rows.length} new challenge questions`,
+            body: `In ${courseName}`,
+            link_url: "/student/challenge",
+            actions: [{ action: "open", title: "Play" }, { action: "dismiss", title: "Dismiss" }],
+          });
+        }
+      } catch (e) { console.warn("notify challenge bulk failed", e); }
+
       queryClient.invalidateQueries({ queryKey: ["challenge-questions", selectedCourseId] });
       toast.success(`${rows.length} questions generated!`);
       setShowAIForm(false);
