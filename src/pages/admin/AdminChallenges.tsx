@@ -66,6 +66,25 @@ const AdminChallenges = () => {
         options: finalOptions,
       });
       if (error) throw error;
+
+      // Notify enrolled students
+      try {
+        const { sendNotification } = await import("@/lib/notifications/api");
+        const { data: enrolled } = await supabase
+          .from("enrollments").select("user_id").eq("course_id", selectedCourseId);
+        const userIds = [...new Set((enrolled || []).map((e: any) => e.user_id))];
+        if (userIds.length) {
+          await sendNotification({
+            target: "users",
+            user_ids: userIds,
+            category: "challenge",
+            title: "New challenge question",
+            body: qText.trim().slice(0, 140),
+            link_url: "/student/challenge",
+            actions: [{ action: "open", title: "Play" }, { action: "dismiss", title: "Dismiss" }],
+          });
+        }
+      } catch (e) { console.warn("notify challenge failed", e); }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["challenge-questions", selectedCourseId] });
