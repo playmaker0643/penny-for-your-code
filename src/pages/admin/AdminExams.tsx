@@ -83,6 +83,25 @@ const AdminExams = () => {
         const { error: qe } = await supabase.from("exam_questions").insert(allQs);
         if (qe) throw qe;
       }
+
+      // Notify enrolled students of the new exam
+      try {
+        const { sendNotification } = await import("@/lib/notifications/api");
+        const { data: enrolled } = await supabase
+          .from("enrollments").select("user_id").eq("course_id", base.course_id);
+        const userIds = [...new Set((enrolled || []).map((e: any) => e.user_id))];
+        if (userIds.length) {
+          await sendNotification({
+            target: "users",
+            user_ids: userIds,
+            category: "live_class",
+            title: "New exam available",
+            body: base.title,
+            link_url: "/student/exams",
+            actions: [{ action: "open", title: "Open" }, { action: "dismiss", title: "Dismiss" }],
+          });
+        }
+      } catch (e) { console.warn("notify exam failed", e); }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["all-exams"] });
