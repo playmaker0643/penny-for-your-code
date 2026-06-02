@@ -25,8 +25,27 @@ export default function StudentNotifications() {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({});
   const [perm, setPerm] = useState<NotificationPermission>("default");
   const [busy, setBusy] = useState(false);
+  const [diag, setDiag] = useState({ sw: false, token: false, dbToken: false });
 
-  useEffect(() => { setPerm(notificationPermission()); }, []);
+  const refreshDiag = async () => {
+    let sw = false;
+    try {
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        sw = regs.some((r) => (r.active?.scriptURL || "").includes("firebase-messaging-sw.js"));
+      }
+    } catch {}
+    const token = !!localStorage.getItem("cb_fcm_token");
+    let dbToken = false;
+    if (user) {
+      const { count } = await supabase
+        .from("notification_tokens").select("id", { count: "exact", head: true }).eq("user_id", user.id);
+      dbToken = (count ?? 0) > 0;
+    }
+    setDiag({ sw, token, dbToken });
+  };
+
+  useEffect(() => { setPerm(notificationPermission()); refreshDiag(); }, [user]);
   useEffect(() => {
     if (!user) return;
     (async () => {
