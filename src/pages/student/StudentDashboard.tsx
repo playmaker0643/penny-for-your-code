@@ -62,6 +62,25 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
+  // Attendance this month
+  const { data: attendance } = useQuery({
+    queryKey: ["student-attendance-month", user?.id],
+    queryFn: async () => {
+      const start = new Date();
+      start.setDate(1);
+      const iso = start.toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("attendance")
+        .select("date,status")
+        .eq("user_id", user!.id)
+        .gte("date", iso);
+      const rows = data || [];
+      const present = rows.filter((r: any) => r.status === "present").length;
+      return { present, total: rows.length };
+    },
+    enabled: !!user,
+  });
+
   const isCourseCompleted = (courseId: string, totalRequired: number | null) => {
     if (!progress || !lessonCounts) return false;
     const courseLessons = lessonCounts[courseId];
