@@ -14,7 +14,7 @@ const RATE_WINDOW_SEC = 60;
 
 const CategoryEnum = z.enum([
   "new_lesson", "challenge", "security", "announcement",
-  "achievement", "live_class", "system",
+  "achievement", "live_class", "chat_message", "system",
 ]);
 
 const Schema = z.object({

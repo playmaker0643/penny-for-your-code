@@ -980,6 +980,7 @@ export type Database = {
           achievement: boolean
           announcement: boolean
           challenge: boolean
+          chat_message: boolean
           live_class: boolean
           new_lesson: boolean
           security: boolean
@@ -993,6 +994,7 @@ export type Database = {
           achievement?: boolean
           announcement?: boolean
           challenge?: boolean
+          chat_message?: boolean
           live_class?: boolean
           new_lesson?: boolean
           security?: boolean
@@ -1006,6 +1008,7 @@ export type Database = {
           achievement?: boolean
           announcement?: boolean
           challenge?: boolean
+          chat_message?: boolean
           live_class?: boolean
           new_lesson?: boolean
           security?: boolean
@@ -1742,6 +1745,7 @@ export type Database = {
         | "achievement"
         | "live_class"
         | "system"
+        | "chat_message"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1899,6 +1903,7 @@ export const Constants = {
         "achievement",
         "live_class",
         "system",
+        "chat_message",
       ],
     },
   },
