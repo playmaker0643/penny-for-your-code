@@ -189,6 +189,14 @@ export default function StudentNotifications() {
             <StatusRow label="FCM token cached locally" ok={diag.token} />
             <StatusRow label="Token saved to server" ok={diag.dbToken} />
           </ul>
+          <div className="flex flex-wrap gap-2 pt-2 border-t">
+            <Button size="sm" variant="secondary" onClick={sendTestNotification} className="gap-1">
+              <Beaker className="h-3 w-3" /> Send test notification
+            </Button>
+            <Button size="sm" variant="ghost" onClick={printDiagnostics}>
+              Print diagnostics to console
+            </Button>
+          </div>
         </Card>
 
         <Card className="p-4">
