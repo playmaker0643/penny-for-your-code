@@ -151,8 +151,7 @@ function AnalyticsCard() {
     setRows(data || []);
     setLoading(false);
   };
-  // initial fetch
-  useState(() => { load(7); return 0; });
+  useEffect(() => { load(7); /* eslint-disable-next-line */ }, []);
   return (
     <Card className="p-4 space-y-3">
       <div className="flex items-center justify-between">
