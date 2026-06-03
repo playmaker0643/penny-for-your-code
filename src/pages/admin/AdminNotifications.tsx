@@ -132,7 +132,71 @@ export default function AdminNotifications() {
             Rate-limited to 60 sends per minute. Recipients with the category disabled in their preferences are skipped.
           </p>
         </Card>
+
+        <AnalyticsCard />
       </div>
     </div>
+  );
+}
+
+function AnalyticsCard() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [days, setDays] = useState(7);
+  const [loading, setLoading] = useState(false);
+  const load = async (d: number) => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc("get_notification_analytics", { _days: d });
+    if (error) toast.error(error.message);
+    setRows(data || []);
+    setLoading(false);
+  };
+  // initial fetch
+  useState(() => { load(7); return 0; });
+  return (
+    <Card className="p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium flex items-center gap-2"><Bell className="h-4 w-4" /> Delivery analytics</h2>
+        <div className="flex gap-1">
+          {[7, 30].map((d) => (
+            <Button key={d} size="sm" variant={days === d ? "default" : "outline"}
+              onClick={() => { setDays(d); load(d); }}>
+              {d}d
+            </Button>
+          ))}
+        </div>
+      </div>
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No data yet for this window.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="text-muted-foreground">
+              <tr className="text-left">
+                <th className="py-1.5 pr-2">Category</th>
+                <th className="py-1.5 pr-2 text-right">Delivered</th>
+                <th className="py-1.5 pr-2 text-right">Clicked</th>
+                <th className="py-1.5 pr-2 text-right">Failed</th>
+                <th className="py-1.5 pr-2 text-right">Dismissed</th>
+                <th className="py-1.5 pr-2 text-right">CTR</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map((r) => (
+                <tr key={r.category}>
+                  <td className="py-1.5 pr-2 font-medium">{r.category}</td>
+                  <td className="py-1.5 pr-2 text-right">{r.delivered}</td>
+                  <td className="py-1.5 pr-2 text-right">{r.clicked}</td>
+                  <td className="py-1.5 pr-2 text-right text-destructive">{r.failed}</td>
+                  <td className="py-1.5 pr-2 text-right">{r.dismissed}</td>
+                  <td className="py-1.5 pr-2 text-right">{Math.round(Number(r.ctr) * 100)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }
