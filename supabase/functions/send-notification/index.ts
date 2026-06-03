@@ -7,7 +7,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FIREBASE_SA = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON")!;
+const FIREBASE_SA = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON") || "";
 
 const RATE_LIMIT = 60;       // sends per sender per minute
 const RATE_WINDOW_SEC = 60;
@@ -121,9 +121,25 @@ Deno.serve(async (req) => {
 
     let sent = 0, failed = 0;
     const deadTokens: string[] = [];
-    if (tokenList.length > 0) {
-      const accessToken = await getFcmAccessToken();
-      const projectId = JSON.parse(FIREBASE_SA).project_id;
+    let pushError: string | null = null;
+    if (tokenList.length > 0 && !FIREBASE_SA) {
+      pushError = "FIREBASE_SERVICE_ACCOUNT_JSON secret not configured — history stored, push skipped";
+      console.warn("[send-notification]", pushError);
+    }
+    if (tokenList.length > 0 && FIREBASE_SA) {
+      let accessToken: string;
+      let projectId: string;
+      try {
+        accessToken = await getFcmAccessToken();
+        projectId = JSON.parse(FIREBASE_SA).project_id;
+      } catch (e) {
+        pushError = "FCM auth failed: " + (e as Error).message;
+        console.error("[send-notification]", pushError);
+        return json({
+          ok: true, recipients: allowed.length, stored: inserted.length,
+          pushed: 0, failed: tokenList.length, pruned_tokens: 0, push_error: pushError,
+        });
+      }
       const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
       const userToNotificationId = new Map(inserted.map((r) => [r.user_id, r.id]));
