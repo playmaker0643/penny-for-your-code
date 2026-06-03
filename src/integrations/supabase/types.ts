@@ -975,45 +975,138 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_dedup: {
+        Row: {
+          category: Database["public"]["Enums"]["notification_category"]
+          created_at: string
+          hash: string
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["notification_category"]
+          created_at?: string
+          hash: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["notification_category"]
+          created_at?: string
+          hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_events: {
+        Row: {
+          category: Database["public"]["Enums"]["notification_category"] | null
+          created_at: string
+          event: string
+          id: string
+          meta: Json
+          notification_id: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["notification_category"] | null
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json
+          notification_id?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["notification_category"] | null
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json
+          notification_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           achievement: boolean
+          ai_recommendation: boolean
           announcement: boolean
+          assignment_deadline: boolean
           challenge: boolean
           chat_message: boolean
+          course_reminder: boolean
+          direct_message: boolean
+          high_priority_only: boolean
+          leaderboard_change: boolean
+          lesson_reminder: boolean
           live_class: boolean
+          mentor_reply: boolean
+          mute_until: string | null
           new_lesson: boolean
+          quiet_hours_end: number | null
+          quiet_hours_start: number | null
+          quiz_reminder: boolean
           security: boolean
           sound_enabled: boolean
+          streak_reminder: boolean
           system: boolean
+          timezone: string
           updated_at: string
           user_id: string
           vibration_enabled: boolean
         }
         Insert: {
           achievement?: boolean
+          ai_recommendation?: boolean
           announcement?: boolean
+          assignment_deadline?: boolean
           challenge?: boolean
           chat_message?: boolean
+          course_reminder?: boolean
+          direct_message?: boolean
+          high_priority_only?: boolean
+          leaderboard_change?: boolean
+          lesson_reminder?: boolean
           live_class?: boolean
+          mentor_reply?: boolean
+          mute_until?: string | null
           new_lesson?: boolean
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          quiz_reminder?: boolean
           security?: boolean
           sound_enabled?: boolean
+          streak_reminder?: boolean
           system?: boolean
+          timezone?: string
           updated_at?: string
           user_id: string
           vibration_enabled?: boolean
         }
         Update: {
           achievement?: boolean
+          ai_recommendation?: boolean
           announcement?: boolean
+          assignment_deadline?: boolean
           challenge?: boolean
           chat_message?: boolean
+          course_reminder?: boolean
+          direct_message?: boolean
+          high_priority_only?: boolean
+          leaderboard_change?: boolean
+          lesson_reminder?: boolean
           live_class?: boolean
+          mentor_reply?: boolean
+          mute_until?: string | null
           new_lesson?: boolean
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          quiz_reminder?: boolean
           security?: boolean
           sound_enabled?: boolean
+          streak_reminder?: boolean
           system?: boolean
+          timezone?: string
           updated_at?: string
           user_id?: string
           vibration_enabled?: boolean
@@ -1554,6 +1647,48 @@ export type Database = {
           },
         ]
       }
+      user_activity_signals: {
+        Row: {
+          active_hour_histogram: number[]
+          current_streak_days: number
+          last_active_at: string
+          last_reengagement_at: string | null
+          last_streak_at: string | null
+          lessons_completed_24h: number
+          notifications_clicked_24h: number
+          notifications_ignored_24h: number
+          notifications_sent_24h: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_hour_histogram?: number[]
+          current_streak_days?: number
+          last_active_at?: string
+          last_reengagement_at?: string | null
+          last_streak_at?: string | null
+          lessons_completed_24h?: number
+          notifications_clicked_24h?: number
+          notifications_ignored_24h?: number
+          notifications_sent_24h?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_hour_histogram?: number[]
+          current_streak_days?: number
+          last_active_at?: string
+          last_reengagement_at?: string | null
+          last_streak_at?: string | null
+          lessons_completed_24h?: number
+          notifications_clicked_24h?: number
+          notifications_ignored_24h?: number
+          notifications_sent_24h?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           is_online: boolean
@@ -1697,6 +1832,17 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      get_notification_analytics: {
+        Args: { _days?: number }
+        Returns: {
+          category: string
+          clicked: number
+          ctr: number
+          delivered: number
+          dismissed: number
+          failed: number
+        }[]
       }
       get_one_admin: { Args: never; Returns: string }
       grade_exam_obj_answers: {
