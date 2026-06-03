@@ -251,6 +251,12 @@ export default function StudentNotifications() {
           </div>
         </Card>
 
+        <SmartDeliveryCard prefs={prefs} updatePref={updatePref} />
+
+        <DeliveryLogCard />
+
+
+
         <Card className="p-2">
           <div className="flex items-center justify-between px-2 py-2">
             <h2 className="text-sm font-medium">History</h2>
