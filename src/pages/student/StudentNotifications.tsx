@@ -218,3 +218,18 @@ export default function StudentNotifications() {
     </div>
   );
 }
+
+function StatusRow({ label, ok, warn }: { label: string; ok: boolean; warn?: boolean }) {
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <span className="text-muted-foreground">{label}</span>
+      {ok ? (
+        <span className="inline-flex items-center gap-1 text-green-600"><CheckCircle2 className="h-3.5 w-3.5" /> OK</span>
+      ) : warn ? (
+        <span className="inline-flex items-center gap-1 text-amber-600"><XCircle className="h-3.5 w-3.5" /> Not set</span>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="h-3.5 w-3.5" /> Missing</span>
+      )}
+    </li>
+  );
+}
