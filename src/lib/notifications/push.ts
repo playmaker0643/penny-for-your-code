@@ -30,20 +30,30 @@ export async function registerSwAndSubscribe(userId: string): Promise<{
   ok: boolean; reason?: string; token?: string;
 }> {
   if (!pushSupported()) {
+    console.warn("[push] not supported (preview iframe or missing APIs)");
     return { ok: false, reason: "Push not supported in this environment (preview iframe or unsupported browser)." };
   }
   let permission = Notification.permission;
+  console.log("[push] current permission:", permission);
   if (permission === "default") {
     permission = await Notification.requestPermission();
+    console.log("[push] requested permission, now:", permission);
   }
   if (permission !== "granted") return { ok: false, reason: "Permission denied" };
 
-  // Register SW
+  // Register the FCM service worker (handles background pushes).
   let registration: ServiceWorkerRegistration;
   try {
-    registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+      scope: "/",
+      updateViaCache: "none",
+    });
     await navigator.serviceWorker.ready;
+    console.log("[push] SW registered, scope:", registration.scope);
+    // Pick up any newer worker version without forcing a reload.
+    registration.update().catch(() => {});
   } catch (e: any) {
+    console.error("[push] SW registration failed:", e);
     return { ok: false, reason: "Service worker registration failed: " + e.message };
   }
 
@@ -61,27 +71,38 @@ export async function registerSwAndSubscribe(userId: string): Promise<{
             serviceWorkerRegistration: registration,
           });
           if (token) break;
-        } catch {
+        } catch (err) {
+          console.warn("[push] getToken attempt", attempt + 1, "failed:", err);
           await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
         }
       }
     }
-  } catch {}
+  } catch (e) {
+    console.warn("[push] messaging unavailable:", e);
+  }
 
-  if (token && localStorage.getItem(TOKEN_CACHE_KEY) !== token) {
-    try {
-      await supabase.from("notification_tokens").upsert(
-        {
-          user_id: userId,
-          token,
-          platform: "web",
-          user_agent: navigator.userAgent.slice(0, 255),
-          last_seen_at: new Date().toISOString(),
-        },
-        { onConflict: "token" }
-      );
-      localStorage.setItem(TOKEN_CACHE_KEY, token);
-    } catch {}
+  if (token) {
+    console.log("[push] FCM token acquired:", token.slice(0, 12) + "…");
+    if (localStorage.getItem(TOKEN_CACHE_KEY) !== token) {
+      try {
+        await supabase.from("notification_tokens").upsert(
+          {
+            user_id: userId,
+            token,
+            platform: "web",
+            user_agent: navigator.userAgent.slice(0, 255),
+            last_seen_at: new Date().toISOString(),
+          },
+          { onConflict: "token" }
+        );
+        localStorage.setItem(TOKEN_CACHE_KEY, token);
+        console.log("[push] token stored on server");
+      } catch (e) {
+        console.warn("[push] failed to store token:", e);
+      }
+    }
+  } else {
+    console.warn("[push] no FCM token obtained (foreground notifications still work)");
   }
 
   // Permission is granted and SW is registered — notifications will work
