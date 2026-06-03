@@ -316,3 +316,124 @@ function StatusRow({ label, ok, warn }: { label: string; ok: boolean; warn?: boo
     </li>
   );
 }
+
+// ---- Smart-delivery preferences (quiet hours, mute, high-priority only) ----
+function SmartDeliveryCard({
+  prefs, updatePref,
+}: { prefs: Record<string, any>; updatePref: (k: string, v: any) => void }) {
+  const muteUntil = prefs.mute_until ? new Date(prefs.mute_until) : null;
+  const muted = !!muteUntil && muteUntil.getTime() > Date.now();
+  const setMute = (hours: number | null) => {
+    updatePref("mute_until", hours == null ? null : new Date(Date.now() + hours * 3600_000).toISOString());
+  };
+  return (
+    <Card className="p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Moon className="h-4 w-4 text-indigo-500" />
+        <h3 className="text-sm font-medium">Smart delivery</h3>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs">Quiet hours start</Label>
+          <Select value={String(prefs.quiet_hours_start ?? "")} onValueChange={(v) => updatePref("quiet_hours_start", v === "" ? null : Number(v))}>
+            <SelectTrigger><SelectValue placeholder="Off" /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="">Off</SelectItem>
+              {Array.from({ length: 24 }, (_, i) => (
+                <SelectItem key={i} value={String(i)}>{String(i).padStart(2, "0")}:00</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Quiet hours end</Label>
+          <Select value={String(prefs.quiet_hours_end ?? "")} onValueChange={(v) => updatePref("quiet_hours_end", v === "" ? null : Number(v))}>
+            <SelectTrigger><SelectValue placeholder="Off" /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="">Off</SelectItem>
+              {Array.from({ length: 24 }, (_, i) => (
+                <SelectItem key={i} value={String(i)}>{String(i).padStart(2, "0")}:00</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground -mt-2">
+        Non-urgent notifications are skipped during quiet hours (your local time).
+      </p>
+
+      <div className="flex items-center justify-between pt-2 border-t">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="h-4 w-4 text-rose-500" />
+          <div>
+            <p className="text-sm">High priority only</p>
+            <p className="text-[11px] text-muted-foreground">Only security, deadlines, mentor & direct messages.</p>
+          </div>
+        </div>
+        <Switch checked={!!prefs.high_priority_only} onCheckedChange={(v) => updatePref("high_priority_only", v)} />
+      </div>
+
+      <div className="flex items-center justify-between pt-2 border-t">
+        <div className="flex items-center gap-2">
+          <BellMinus className="h-4 w-4 text-amber-500" />
+          <div>
+            <p className="text-sm">Mute notifications</p>
+            <p className="text-[11px] text-muted-foreground">
+              {muted ? `Muted until ${muteUntil!.toLocaleString()}` : "Pause all categories temporarily."}
+            </p>
+          </div>
+        </div>
+        <Select value="" onValueChange={(v) => setMute(v === "off" ? null : Number(v))}>
+          <SelectTrigger className="w-32"><SelectValue placeholder={muted ? "Muted" : "Off"} /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="off">Unmute</SelectItem>
+            <SelectItem value="1">1 hour</SelectItem>
+            <SelectItem value="8">8 hours</SelectItem>
+            <SelectItem value="24">24 hours</SelectItem>
+            <SelectItem value="168">1 week</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </Card>
+  );
+}
+
+// ---- Delivery log (debug-friendly) -----------------------------------------
+function DeliveryLogCard() {
+  const { user } = useAuth();
+  const [rows, setRows] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const load = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("notification_events")
+      .select("event, category, meta, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setRows(data || []);
+  };
+  useEffect(() => { if (open) load(); }, [open, user]);
+  return (
+    <Card className="p-4">
+      <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between text-sm font-medium">
+        <span className="flex items-center gap-2"><ScrollText className="h-4 w-4 text-muted-foreground" /> Delivery log</span>
+        <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show last 50"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 max-h-72 overflow-auto text-xs divide-y">
+          {rows.length === 0 ? (
+            <p className="text-muted-foreground py-4 text-center">No events yet.</p>
+          ) : rows.map((r, i) => (
+            <div key={i} className="py-1.5 flex items-center justify-between gap-2">
+              <span className="font-mono text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleTimeString()}</span>
+              <span className="uppercase tracking-wide text-[10px]">{r.event}</span>
+              <span className="text-muted-foreground truncate flex-1 text-right">{r.category || "—"}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
