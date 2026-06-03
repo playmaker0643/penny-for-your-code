@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Volume2, VolumeX, Vibrate } from "lucide-react";
+import { Bell, BellOff, Volume2, VolumeX, Vibrate, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,27 @@ export default function StudentNotifications() {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({});
   const [perm, setPerm] = useState<NotificationPermission>("default");
   const [busy, setBusy] = useState(false);
+  const [diag, setDiag] = useState({ sw: false, token: false, dbToken: false });
 
-  useEffect(() => { setPerm(notificationPermission()); }, []);
+  const refreshDiag = async () => {
+    let sw = false;
+    try {
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        sw = regs.some((r) => (r.active?.scriptURL || "").includes("firebase-messaging-sw.js"));
+      }
+    } catch {}
+    const token = !!localStorage.getItem("cb_fcm_token");
+    let dbToken = false;
+    if (user) {
+      const { count } = await supabase
+        .from("notification_tokens").select("id", { count: "exact", head: true }).eq("user_id", user.id);
+      dbToken = (count ?? 0) > 0;
+    }
+    setDiag({ sw, token, dbToken });
+  };
+
+  useEffect(() => { setPerm(notificationPermission()); refreshDiag(); }, [user]);
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -50,9 +69,27 @@ export default function StudentNotifications() {
     if (!user) return;
     setBusy(true);
     const res = await registerSwAndSubscribe(user.id);
-    setBusy(false); setPerm(notificationPermission());
+    setBusy(false); setPerm(notificationPermission()); await refreshDiag();
     if (res.ok) toast.success("Notifications enabled");
     else toast.error(res.reason || "Could not enable");
+  };
+
+  const retry = async () => {
+    if (!user) return;
+    setBusy(true);
+    try {
+      localStorage.removeItem("cb_fcm_token");
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) {
+          if ((r.active?.scriptURL || "").includes("firebase-messaging-sw.js")) await r.unregister();
+        }
+      }
+      const res = await registerSwAndSubscribe(user.id);
+      setPerm(notificationPermission()); await refreshDiag();
+      if (res.ok) toast.success("Re-registered successfully");
+      else toast.error(res.reason || "Re-registration failed");
+    } finally { setBusy(false); }
   };
 
   return (
@@ -67,6 +104,26 @@ export default function StudentNotifications() {
         </header>
 
         <PermissionPrompt />
+
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-sm">Push diagnostics</p>
+              <p className="text-xs text-muted-foreground">Status of this device's push connection.</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={retry} disabled={busy} className="gap-1">
+              <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} />
+              Re-register
+            </Button>
+          </div>
+          <ul className="text-sm space-y-1.5">
+            <StatusRow label="Browser supports push" ok={pushSupported()} />
+            <StatusRow label="Notification permission granted" ok={perm === "granted"} warn={perm === "default"} />
+            <StatusRow label="Service worker active" ok={diag.sw} />
+            <StatusRow label="FCM token cached locally" ok={diag.token} />
+            <StatusRow label="Token saved to server" ok={diag.dbToken} />
+          </ul>
+        </Card>
 
         <Card className="p-4">
           <div className="flex items-center justify-between mb-3">
@@ -159,5 +216,20 @@ export default function StudentNotifications() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function StatusRow({ label, ok, warn }: { label: string; ok: boolean; warn?: boolean }) {
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <span className="text-muted-foreground">{label}</span>
+      {ok ? (
+        <span className="inline-flex items-center gap-1 text-green-600"><CheckCircle2 className="h-3.5 w-3.5" /> OK</span>
+      ) : warn ? (
+        <span className="inline-flex items-center gap-1 text-amber-600"><XCircle className="h-3.5 w-3.5" /> Not set</span>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="h-3.5 w-3.5" /> Missing</span>
+      )}
+    </li>
   );
 }
