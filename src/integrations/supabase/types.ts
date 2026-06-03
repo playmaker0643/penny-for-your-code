@@ -1746,6 +1746,15 @@ export type Database = {
         | "live_class"
         | "system"
         | "chat_message"
+        | "lesson_reminder"
+        | "course_reminder"
+        | "assignment_deadline"
+        | "quiz_reminder"
+        | "direct_message"
+        | "mentor_reply"
+        | "streak_reminder"
+        | "leaderboard_change"
+        | "ai_recommendation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1904,6 +1913,15 @@ export const Constants = {
         "live_class",
         "system",
         "chat_message",
+        "lesson_reminder",
+        "course_reminder",
+        "assignment_deadline",
+        "quiz_reminder",
+        "direct_message",
+        "mentor_reply",
+        "streak_reminder",
+        "leaderboard_change",
+        "ai_recommendation",
       ],
     },
   },
