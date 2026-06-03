@@ -92,6 +92,72 @@ export default function StudentNotifications() {
     } finally { setBusy(false); }
   };
 
+  // Local browser test — shows a real OS-level notification via the SW
+  // (or the Notification API fallback) without round-tripping the server.
+  const sendTestNotification = async () => {
+    console.group("[push] Send Test Notification");
+    try {
+      if (!("Notification" in window)) { toast.error("Notifications not supported"); return; }
+      if (Notification.permission !== "granted") {
+        const p = await Notification.requestPermission();
+        setPerm(p);
+        if (p !== "granted") { toast.error("Permission not granted"); return; }
+      }
+      const reg = "serviceWorker" in navigator
+        ? await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js")
+        : null;
+      const title = "Test notification";
+      const opts: NotificationOptions = {
+        body: "If you see this, your browser push pipeline is working.",
+        icon: "/icon-512.png",
+        badge: "/icon-512.png",
+        tag: "test:" + Date.now(),
+        data: { link: "/student/notifications" },
+      };
+      if (reg && reg.active) {
+        await reg.showNotification(title, opts);
+        console.log("[push] showNotification via SW OK");
+      } else {
+        new Notification(title, opts);
+        console.log("[push] direct Notification() OK (no SW)");
+      }
+      toast.success("Test notification fired");
+    } catch (e: any) {
+      console.error("[push] test failed", e);
+      toast.error("Test failed: " + (e?.message || e));
+    } finally { console.groupEnd(); }
+  };
+
+  // Detailed diagnostic dump for the console.
+  const printDiagnostics = async () => {
+    console.group("%c[push] DIAGNOSTIC REPORT", "color:#3b82f6;font-weight:bold");
+    const secure = window.isSecureContext;
+    const host = location.hostname;
+    const inIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+    console.log("Secure context (HTTPS/localhost):", secure);
+    console.log("Hostname:", host, "| in iframe:", inIframe);
+    console.log("Notification API:", "Notification" in window);
+    console.log("Service Worker API:", "serviceWorker" in navigator);
+    console.log("Push Manager:", "PushManager" in window);
+    console.log("Permission:", typeof Notification !== "undefined" ? Notification.permission : "n/a");
+    console.log("FCM token (cached):", localStorage.getItem("cb_fcm_token")?.slice(0, 18) + "…" || "none");
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      console.log("SW registrations:", regs.map((r) => ({
+        scope: r.scope, script: r.active?.scriptURL, state: r.active?.state,
+      })));
+    }
+    if (user) {
+      const { count } = await supabase
+        .from("notification_tokens").select("id", { count: "exact", head: true }).eq("user_id", user.id);
+      console.log("Tokens stored server-side for this user:", count);
+    }
+    console.log("UA:", navigator.userAgent);
+    console.groupEnd();
+    toast.success("Diagnostics printed to console");
+  };
+
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
