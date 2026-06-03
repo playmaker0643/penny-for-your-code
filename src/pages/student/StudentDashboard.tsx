@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
-import { BookOpen, CheckCircle, ChevronRight, Lock } from "lucide-react";
+import { BookOpen, CheckCircle, ChevronRight, Lock, CalendarCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +62,25 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
+  // Attendance this month
+  const { data: attendance } = useQuery({
+    queryKey: ["student-attendance-month", user?.id],
+    queryFn: async () => {
+      const start = new Date();
+      start.setDate(1);
+      const iso = start.toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("attendance")
+        .select("date,status")
+        .eq("user_id", user!.id)
+        .gte("date", iso);
+      const rows = data || [];
+      const present = rows.filter((r: any) => r.status === "present").length;
+      return { present, total: rows.length };
+    },
+    enabled: !!user,
+  });
+
   const isCourseCompleted = (courseId: string, totalRequired: number | null) => {
     if (!progress || !lessonCounts) return false;
     const courseLessons = lessonCounts[courseId];
@@ -79,7 +98,23 @@ const StudentDashboard = () => {
         <h1 className="text-2xl font-bold font-display text-foreground mb-1">
           Welcome, {firstName}!
         </h1>
-        <p className="text-sm text-muted-foreground mb-8">Your learning journey starts here. Tap a course to see its lessons.</p>
+        <p className="text-sm text-muted-foreground mb-4">Your learning journey starts here. Tap a course to see its lessons.</p>
+
+        <div
+          onClick={() => navigate("/student/attendance")}
+          className="cyber-card rounded-xl p-4 mb-6 cursor-pointer hover:border-primary/40 active:scale-[0.98] transition-colors flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <CalendarCheck className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-foreground text-sm">Attendance this month</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {attendance ? `${attendance.present} present · ${attendance.total} marked` : "Loading…"}
+            </p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-32">
