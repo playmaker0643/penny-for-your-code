@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Volume2, VolumeX, Vibrate, CheckCircle2, XCircle, RefreshCw, Beaker } from "lucide-react";
+import { Bell, BellOff, Volume2, VolumeX, Vibrate, CheckCircle2, XCircle, RefreshCw, Beaker, Moon, BellMinus, ShieldAlert, ScrollText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -15,9 +18,9 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 
-const CATS: NotificationCategory[] = [
-  "new_lesson","challenge","announcement","achievement","live_class","system",
-];
+// Auto-render every category from the meta map so newly-added categories
+// (lesson_reminder, course_reminder, etc.) appear without further edits.
+const CATS = Object.keys(CATEGORY_META) as NotificationCategory[];
 
 export default function StudentNotifications() {
   const { user } = useAuth();
