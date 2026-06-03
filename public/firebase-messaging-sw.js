@@ -107,19 +107,41 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const data = event.notification.data || {};
   let url = data.link || "/";
-  if (event.action === "dismiss") return;
-  if (event.action && event.action.startsWith("http")) url = event.action;
+  const dismissed = event.action === "dismiss";
 
   event.waitUntil((async () => {
     const all = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    const eventMsg = {
+      type: dismissed ? "NOTIFICATION_DISMISS" : "NOTIFICATION_CLICK",
+      url,
+      data,
+      notificationId: data.notificationId || null,
+      category: data.category || null,
+    };
+    // Broadcast to any open client so it can POST to track-notification-event
+    for (const c of all) c.postMessage(eventMsg);
+    if (dismissed) return;
+    if (event.action && event.action.startsWith("http")) url = event.action;
     for (const c of all) {
       if ("focus" in c) {
-        c.postMessage({ type: "NOTIFICATION_CLICK", url, data });
         try { await c.navigate(url); } catch {}
         return c.focus();
       }
     }
     if (clients.openWindow) return clients.openWindow(url);
+  })());
+});
+
+/* ---------- Dismiss without click (Chrome fires this) --------------------- */
+self.addEventListener("notificationclose", (event) => {
+  const data = event.notification.data || {};
+  event.waitUntil((async () => {
+    const all = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of all) c.postMessage({
+      type: "NOTIFICATION_DISMISS",
+      notificationId: data.notificationId || null,
+      category: data.category || null,
+    });
   })());
 });
 
