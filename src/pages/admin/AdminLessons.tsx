@@ -118,26 +118,19 @@ const AdminLessons = () => {
         if (qError) throw qError;
       }
 
-      // Notify enrolled students of the new lesson
+      // Notify all students of the new lesson
       try {
         const { sendNotification } = await import("@/lib/notifications/api");
-        const { data: enrolled } = await supabase
-          .from("enrollments")
-          .select("user_id")
-          .eq("course_id", form.course_id);
-        const userIds = (enrolled || []).map((e: any) => e.user_id);
-        if (userIds.length) {
-          await sendNotification({
-            target: "users",
-            user_ids: userIds,
-            category: "new_lesson",
-            title: "New lesson available",
-            body: form.title,
-            link_url: `/student/courses/${form.course_id}`,
-            actions: [{ action: "open", title: "Open Lesson" }, { action: "dismiss", title: "Dismiss" }],
-          });
-        }
+        await sendNotification({
+          target: "all_students",
+          category: "new_lesson",
+          title: "New lesson available",
+          body: form.title,
+          link_url: `/student/courses/${form.course_id}`,
+          actions: [{ action: "open", title: "Open Lesson" }, { action: "dismiss", title: "Dismiss" }],
+        });
       } catch (e) { console.warn("notify new_lesson failed", e); }
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-lessons"] });
