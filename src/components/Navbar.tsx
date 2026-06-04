@@ -4,6 +4,8 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import logoAsset from "@/assets/codebreakers-logo.jpg.asset.json";
+
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -24,12 +26,17 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo left - not clickable */}
-        <div className="flex items-center gap-1">
-          <span className="text-3xl font-mono text-primary font-bold">&lt;/&gt;</span>
+        <div className="flex items-center gap-2">
+          <img
+            src={logoAsset.url}
+            alt="CodeBreakers"
+            className="h-9 w-9 rounded-lg object-cover shadow-[0_0_18px_hsl(var(--primary)/0.45)]"
+          />
           <span className="text-lg font-bold font-display text-foreground">
             Code<span className="text-primary">Breakers</span>
           </span>
         </div>
+
 
         {/* Desktop auth buttons center-right */}
         <div className="hidden md:flex items-center gap-3">
