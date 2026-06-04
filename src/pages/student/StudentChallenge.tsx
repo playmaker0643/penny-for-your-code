@@ -428,10 +428,8 @@ const StudentChallenge = () => {
 
     if (match) {
       setMatchId(match.id);
-      // Update match status to active
-      await supabase.from("challenge_matches").update({
-        status: "active", accepted_at: new Date().toISOString(),
-      }).eq("id", match.id);
+      // Mark match active server-side (validated)
+      await supabase.rpc("accept_match", { _match_id: match.id });
 
       const qIds = match.question_ids as string[];
       await loadQuestionsFromIds(qIds);
