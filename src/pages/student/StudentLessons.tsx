@@ -282,7 +282,16 @@ const StudentLessons = () => {
         </div>
       ) : (
       <div>
-        <h1 className="text-2xl font-bold font-display text-foreground mb-6">Lessons</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold font-display text-foreground">Lessons</h1>
+          {xpRow && (
+            <div className="flex items-center gap-2 text-xs font-mono">
+              <Badge variant="outline" className="gap-1"><Trophy className="h-3 w-3 text-primary" /> {xpRow.xp} XP</Badge>
+              <Badge variant="outline">Lv {xpRow.level}</Badge>
+              {xpRow.current_streak > 0 && <Badge variant="outline">🔥 {xpRow.current_streak}d</Badge>}
+            </div>
+          )}
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-32">
@@ -295,6 +304,8 @@ const StudentLessons = () => {
                 <p className="text-sm font-mono text-primary">{group.courseName}</p>
                 {group.items.map((lesson, idx) => {
                   const status = getLessonStatus(lesson, idx, group.items);
+                  const pracCount = practicalsCountFor(lesson.id).length;
+                  const pracPassed = practicalsPassedCountFor(lesson.id);
                   return (
                     <div
                       key={lesson.id}
@@ -306,10 +317,12 @@ const StudentLessons = () => {
                           setChatMessages([]);
                         } else if (status === "locked_until_tomorrow") {
                           toast.info("This lesson unlocks tomorrow!");
+                        } else if (status === "locked_practicals") {
+                          toast.info("Complete the previous lesson's required practicals to unlock this.");
                         }
                       }}
                       className={`cyber-card rounded-xl p-4 flex items-center gap-3 transition-colors ${
-                        status === "locked" || status === "locked_until_tomorrow"
+                        status === "locked" || status === "locked_until_tomorrow" || status === "locked_practicals"
                           ? "opacity-50 cursor-not-allowed"
                           : "cursor-pointer hover:border-primary/40"
                       }`}
@@ -319,16 +332,23 @@ const StudentLessons = () => {
                           <CheckCircle className="h-5 w-5 text-green-500" />
                         ) : status === "unlocked" ? (
                           <Unlock className="h-4 w-4 text-primary" />
+                        ) : status === "locked_practicals" ? (
+                          <Target className="h-4 w-4 text-yellow-500" />
                         ) : (
                           <Lock className="h-4 w-4 text-muted-foreground" />
                         )}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-foreground text-sm truncate">{lesson.title}</h3>
                         {lesson.courses && (
                           <p className="text-xs text-primary font-mono">{(lesson.courses as any).title}</p>
                         )}
                       </div>
+                      {pracCount > 0 && (
+                        <Badge variant="outline" className="text-[10px] gap-1 shrink-0">
+                          <Target className="h-3 w-3" /> {pracPassed}/{pracCount}
+                        </Badge>
+                      )}
                     </div>
                   );
                 })}
