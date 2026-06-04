@@ -456,33 +456,35 @@ const StudentChallenge = () => {
   const handleAnswer = async () => {
     if (!selectedAnswer) return;
     const q = questions[currentQ];
-    const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
-    const isCorrect = !!correct;
-    setLastCorrect(isCorrect);
-    const newScore = isCorrect ? myScore + 1 : myScore;
-    if (isCorrect) setMyScore(newScore);
-    setAnswered(true);
 
-    // AI mode: simulate opponent
+    // AI mode: client-side grading only (no DB match)
     if (mode === "ai") {
+      const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
+      const isCorrect = !!correct;
+      setLastCorrect(isCorrect);
+      if (isCorrect) setMyScore(s => s + 1);
+      setAnswered(true);
       if (Math.random() < 0.5) setOpponentScore(s => s + 1);
       return;
     }
 
-    // Friend mode: update match in DB
+    // Friend mode: server-validated scoring (player cannot self-inflate score)
     if (matchId && user) {
-      const { data: match } = await supabase.from("challenge_matches").select("*").eq("id", matchId).single();
-      if (!match) return;
-      const amPlayerOne = match.player_one_id === user.id;
-      const updates: any = {};
-      if (amPlayerOne) {
-        updates.player_one_score = newScore;
-        updates.player_one_current_index = currentQ + 1;
-      } else {
-        updates.player_two_score = newScore;
-        updates.player_two_current_index = currentQ + 1;
-      }
-      await supabase.from("challenge_matches").update(updates).eq("id", matchId);
+      const { data, error } = await supabase.rpc("submit_match_answer", {
+        _match_id: matchId, _qid: q.id, _answer: selectedAnswer,
+      });
+      if (error) { toast.error(error.message); return; }
+      const result = data as { correct: boolean; my_score: number; my_index: number };
+      setLastCorrect(!!result.correct);
+      setMyScore(result.my_score);
+      setAnswered(true);
+    } else {
+      // Fallback (no match) — local grading
+      const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
+      const isCorrect = !!correct;
+      setLastCorrect(isCorrect);
+      if (isCorrect) setMyScore(s => s + 1);
+      setAnswered(true);
     }
   };
 
