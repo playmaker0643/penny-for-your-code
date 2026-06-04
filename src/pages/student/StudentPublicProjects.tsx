@@ -6,11 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Folder, FileText, Trash2, Save, Eye, X, Globe, Lock, ChevronRight, ArrowLeft, Unlock } from "lucide-react";
+import { Plus, Folder, FileText, Trash2, Save, Eye, X, Globe, Lock, ChevronRight, ArrowLeft, Unlock, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import Editor from "@monaco-editor/react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import SearchBar from "@/components/SearchBar";
+import { filterByQuery } from "@/lib/search";
 
 type FileNode = { path: string; content: string };
 
@@ -34,6 +36,8 @@ export default function StudentPublicProjects() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [searchQ, setSearchQ] = useState("");
+  const [genDesc, setGenDesc] = useState(false);
 
   const { data: projects } = useQuery({
     queryKey: ["my-public-projects", user?.id],
@@ -48,8 +52,18 @@ export default function StudentPublicProjects() {
         { path: "style.css", content: "body { font-family: sans-serif; padding: 20px; }" },
         { path: "script.js", content: "console.log('Hello world');" },
       ];
+      // Auto-generate a description if the user left it empty
+      let description = newDesc.trim();
+      if (!description) {
+        try {
+          const { data: gen } = await supabase.functions.invoke("generate-project-description", {
+            body: { title: newName, files: initialFiles },
+          });
+          if (gen?.description) description = gen.description;
+        } catch { /* graceful fallback — proceed with empty desc */ }
+      }
       const { data, error } = await supabase.from("public_projects").insert({
-        user_id: user!.id, name: newName, description: newDesc, files: initialFiles, is_public: true,
+        user_id: user!.id, name: newName, description, files: initialFiles, is_public: true,
       }).select().single();
       if (error) throw error;
       return data;
@@ -61,6 +75,25 @@ export default function StudentPublicProjects() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const generateNewDesc = async () => {
+    if (!newName.trim()) return toast.error("Enter a project name first");
+    setGenDesc(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-project-description", {
+        body: { title: newName },
+      });
+      if (error) throw error;
+      if (data?.description) {
+        setNewDesc(data.description);
+        toast.success("Description generated");
+      } else toast.error("Could not generate");
+    } catch (e: any) {
+      toast.error(e.message || "AI generation failed");
+    } finally {
+      setGenDesc(false);
+    }
+  };
 
   if (active) return <ProjectEditor project={active} onClose={() => { setActive(null); qc.invalidateQueries({ queryKey: ["my-public-projects"] }); }} />;
 
@@ -77,15 +110,20 @@ export default function StudentPublicProjects() {
           <TabsTrigger value="discover">Discover</TabsTrigger>
         </TabsList>
         <TabsContent value="mine" className="space-y-2 mt-4">
-          {projects?.map((p: any) => (
+          <SearchBar value={searchQ} onChange={setSearchQ} placeholder="Search your projects by name or description..." />
+          {filterByQuery(projects, searchQ, (p: any) => p.name, (p: any) => p.description)?.map((p: any) => (
             <div key={p.id} onClick={() => setActive(p)} className="cyber-card rounded-xl p-3 cursor-pointer hover:border-primary/40 flex justify-between items-center">
-              <div>
-                <p className="font-bold text-sm">{p.name}</p>
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate">{p.name}</p>
+                {p.description && <p className="text-[11px] text-muted-foreground line-clamp-1">{p.description}</p>}
                 <p className="text-[10px] text-muted-foreground">{p.files.length} files • {p.is_public ? <Globe className="inline h-3 w-3" /> : <Lock className="inline h-3 w-3" />}</p>
               </div>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 shrink-0" />
             </div>
           ))}
+          {projects && projects.length > 0 && filterByQuery(projects, searchQ, (p: any) => p.name, (p: any) => p.description).length === 0 && (
+            <p className="text-center py-8 text-muted-foreground text-sm">No projects match "{searchQ}".</p>
+          )}
           {(!projects || projects.length === 0) && <p className="text-center py-12 text-muted-foreground text-sm">No projects yet. Click NEW.</p>}
         </TabsContent>
         <TabsContent value="discover" className="space-y-2 mt-4">
@@ -98,8 +136,13 @@ export default function StudentPublicProjects() {
           <div className="max-w-md mx-auto cyber-card rounded-xl p-4 mt-20" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold mb-3">New Project</h3>
             <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Project name" className="mb-2" />
-            <Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Description" className="mb-3" />
-            <Button onClick={() => createProject.mutate()} disabled={!newName} className="w-full bg-primary text-primary-foreground">Create</Button>
+            <Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Description (leave empty to auto-generate with AI)" className="mb-2" />
+            <Button type="button" variant="outline" size="sm" onClick={generateNewDesc} disabled={genDesc || !newName.trim()} className="mb-3 w-full">
+              <Sparkles className="h-3 w-3 mr-1" /> {genDesc ? "Generating..." : "Generate description with AI"}
+            </Button>
+            <Button onClick={() => createProject.mutate()} disabled={!newName || createProject.isPending} className="w-full bg-primary text-primary-foreground">
+              {createProject.isPending ? "Creating..." : "Create"}
+            </Button>
           </div>
         </div>
       )}
