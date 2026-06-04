@@ -496,24 +496,9 @@ const StudentChallenge = () => {
       setWinner(resolvedWinner);
       setStep("victory");
 
-      // Update match as completed
-      if (matchId && user) {
-        const { data: match } = await supabase.from("challenge_matches").select("*").eq("id", matchId).single();
-        if (match) {
-          const amPlayerOne = match.player_one_id === user.id;
-          let winnerId: string | null = null;
-          if (finalMyScore > finalOpponentScore) winnerId = user.id;
-          else if (finalOpponentScore > finalMyScore) winnerId = amPlayerOne ? match.player_two_id : match.player_one_id;
-          await supabase.from("challenge_matches").update({
-            status: "completed",
-            completed_at: new Date().toISOString(),
-            winner_id: winnerId,
-            ...(amPlayerOne
-              ? { player_one_score: finalMyScore, player_one_current_index: questions.length }
-              : { player_two_score: finalMyScore, player_two_current_index: questions.length }
-            ),
-          }).eq("id", matchId);
-        }
+      // Server-side finalization (computes winner from authoritative scores)
+      if (matchId && user && mode !== "ai") {
+        await supabase.rpc("finalize_match", { _match_id: matchId });
       }
       return;
     }
