@@ -26,6 +26,7 @@ const AdminLessons = () => {
   const [codeMode, setCodeMode] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [viewLesson, setViewLesson] = useState<any>(null);
+  const [practicalLesson, setPracticalLesson] = useState<any>(null);
   const [richContent, setRichContent] = useState("");
   const [form, setForm] = useState({
     course_id: "",
