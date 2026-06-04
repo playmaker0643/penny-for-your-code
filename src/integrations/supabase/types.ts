@@ -451,6 +451,8 @@ export type Database = {
           description: string | null
           id: string
           is_published: boolean
+          match_cross_course: boolean
+          match_lesson_range: number
           thumbnail_url: string | null
           title: string
           total_lessons_required: number | null
@@ -463,6 +465,8 @@ export type Database = {
           description?: string | null
           id?: string
           is_published?: boolean
+          match_cross_course?: boolean
+          match_lesson_range?: number
           thumbnail_url?: string | null
           title: string
           total_lessons_required?: number | null
@@ -475,6 +479,8 @@ export type Database = {
           description?: string | null
           id?: string
           is_published?: boolean
+          match_cross_course?: boolean
+          match_lesson_range?: number
           thumbnail_url?: string | null
           title?: string
           total_lessons_required?: number | null
@@ -1027,6 +1033,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      matchmaking_audit: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          id: string
+          outcome: string
+          override: boolean
+          reason: string | null
+          requester_id: string
+          requester_lesson: number | null
+          target_id: string | null
+          target_lesson: number | null
+          target_reg: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          outcome: string
+          override?: boolean
+          reason?: string | null
+          requester_id: string
+          requester_lesson?: number | null
+          target_id?: string | null
+          target_lesson?: number | null
+          target_reg?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          outcome?: string
+          override?: boolean
+          reason?: string | null
+          requester_id?: string
+          requester_lesson?: number | null
+          target_id?: string | null
+          target_lesson?: number | null
+          target_reg?: string | null
+        }
+        Relationships: []
       }
       message_read_receipts: {
         Row: {
@@ -2053,6 +2101,17 @@ export type Database = {
         Args: { _answer: string; _qid: string }
         Returns: boolean
       }
+      discover_challenge_peers: {
+        Args: { _course: string }
+        Returns: {
+          country: string
+          full_name: string
+          is_online: boolean
+          lesson_position: number
+          registration_number: string
+          user_id: string
+        }[]
+      }
       eligible_challenge_questions: {
         Args: { _course?: string; _user: string }
         Returns: {
@@ -2135,7 +2194,25 @@ export type Database = {
         Args: { _lesson: string; _user: string }
         Returns: boolean
       }
+      request_challenge: {
+        Args: {
+          _course: string
+          _override?: boolean
+          _question_ids: string[]
+          _receiver: string
+          _target_reg?: string
+        }
+        Returns: {
+          invitation_id: string
+          match_id: string
+          warning: string
+        }[]
+      }
       start_admin_chat: { Args: never; Returns: string }
+      user_lesson_position: {
+        Args: { _course: string; _user: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin" | "student"

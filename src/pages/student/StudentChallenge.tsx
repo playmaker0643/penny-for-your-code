@@ -120,42 +120,10 @@ const StudentChallenge = () => {
   const { data: courseStudents } = useQuery({
     queryKey: ["course-students-challenge", selectedCourseId],
     queryFn: async () => {
-      // Get enrolled students for this course
-      const { data: enrollments } = await supabase
-        .from("enrollments")
-        .select("user_id")
-        .eq("course_id", selectedCourseId);
-      
-      const enrolledIds = (enrollments || []).map((e: any) => e.user_id).filter((id: string) => id !== user!.id);
-      
-      if (enrolledIds.length === 0) {
-        // Fallback: show all non-admin students
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, registration_number, country")
-          .neq("user_id", user!.id);
-        const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-        const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
-        const students = (profiles || []).filter((p: any) => !adminIds.has(p.user_id));
-        const ids = students.map((p: any) => p.user_id);
-        const { data: presences } = await supabase.from("user_presence").select("user_id, is_online").in("user_id", ids.length > 0 ? ids : ["none"]);
-        const onlineMap = new Map((presences || []).map((p: any) => [p.user_id, p.is_online]));
-        return students.map((p: any) => ({ ...p, is_online: onlineMap.get(p.user_id) || false }));
-      }
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, registration_number, country")
-        .in("user_id", enrolledIds);
-
-      const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-      const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
-      const students = (profiles || []).filter((p: any) => !adminIds.has(p.user_id));
-
-      const ids = students.map((p: any) => p.user_id);
-      const { data: presences } = await supabase.from("user_presence").select("user_id, is_online").in("user_id", ids.length > 0 ? ids : ["none"]);
-      const onlineMap = new Map((presences || []).map((p: any) => [p.user_id, p.is_online]));
-      return students.map((p: any) => ({ ...p, is_online: onlineMap.get(p.user_id) || false }));
+      if (!selectedCourseId) return [];
+      const { data, error } = await supabase.rpc("discover_challenge_peers", { _course: selectedCourseId });
+      if (error) { console.warn("discover_challenge_peers", error); return []; }
+      return data || [];
     },
     enabled: !!selectedCourseId && step === "select-player",
   });
@@ -324,14 +292,14 @@ const StudentChallenge = () => {
     }
   };
 
-  const handleSelectPlayer = async (p: any) => {
+  const handleSelectPlayer = async (p: any, override = false) => {
     const opp: Player = {
       id: p.user_id, name: p.full_name, regNum: p.registration_number || "",
       country: p.country || "", initials: getInitials(p.full_name),
     };
     setOpponent(opp);
 
-    // Fetch questions and create match first
+    // Fetch eligible questions (level-gated) and create match via secure RPC
     const { data: allQ } = await supabase
       .from("challenge_questions")
       .select("id")
@@ -346,32 +314,23 @@ const StudentChallenge = () => {
     const picked = pickChallengeQuestions(allQ, seed, 10);
     const questionIds = picked.map(q => q.id);
 
-    // Create invitation with course_id
-    const { data: inv, error: invErr } = await supabase.from("challenge_invitations").insert({
-      sender_id: user!.id, receiver_id: p.user_id, status: "pending", course_id: selectedCourseId,
-    }).select().single();
-
-    if (invErr || !inv) {
-      toast.error("Failed to send invitation");
+    // Validated server-side: course enrolment, lesson range, IDOR protection
+    const { data: rpcRows, error: rpcErr } = await supabase.rpc("request_challenge", {
+      _receiver: p.user_id,
+      _course: selectedCourseId,
+      _question_ids: questionIds,
+      _override: override,
+      _target_reg: p.registration_number || null,
+    });
+    const row: any = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
+    if (rpcErr || !row?.match_id) {
+      const msg = rpcErr?.message || "Failed to send invitation";
+      toast.error(msg.replace(/^.*?:\s*/, ""));
       return;
     }
+    if (row.warning) toast.warning(row.warning);
 
-    // Create match record
-    const { data: match, error: matchErr } = await supabase.from("challenge_matches").insert({
-      invitation_id: inv.id,
-      course_id: selectedCourseId,
-      player_one_id: user!.id,
-      player_two_id: p.user_id,
-      question_ids: questionIds,
-      status: "pending",
-    }).select().single();
-
-    if (matchErr || !match) {
-      toast.error("Failed to create match");
-      return;
-    }
-
-    setMatchId(match.id);
+    setMatchId(row.match_id);
     toast.success(`Challenge sent to ${p.full_name}! Waiting...`);
     setStep("waiting");
 
@@ -391,22 +350,20 @@ const StudentChallenge = () => {
 
     // Listen for acceptance via realtime on the invitation
     const channel = supabase
-      .channel(`inv-response-${inv.id}`)
+      .channel(`inv-response-${row.invitation_id}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "challenge_invitations",
-        filter: `id=eq.${inv.id}`,
+        filter: `id=eq.${row.invitation_id}`,
       }, async (payload) => {
         const updated = payload.new as any;
         if (updated.status === "accepted") {
           toast.success(`${p.full_name} accepted! Starting...`);
           supabase.removeChannel(channel);
-          // Update match status
           await supabase.from("challenge_matches").update({
             status: "active", accepted_at: new Date().toISOString(),
-          }).eq("id", match.id);
-          // Load questions and start
+          }).eq("id", row.match_id);
           await loadQuestionsFromIds(questionIds);
           setCurrentQ(0);
           setMyScore(0);
@@ -423,21 +380,25 @@ const StudentChallenge = () => {
       })
       .subscribe();
 
-    // Timeout after 60s
-    setTimeout(() => {
-      supabase.removeChannel(channel);
-    }, 65000);
+    setTimeout(() => { supabase.removeChannel(channel); }, 65000);
   };
 
   const findByReg = async () => {
     if (!regInput.trim()) return;
     const { data } = await supabase.from("profiles")
       .select("user_id, full_name, registration_number, country")
-      .eq("registration_number", regInput.trim()).single();
+      .eq("registration_number", regInput.trim()).maybeSingle();
     if (!data) { toast.error("Student not found"); return; }
     if (data.user_id === user!.id) { toast.error("That's you!"); return; }
-    handleSelectPlayer(data);
+    // Manual reg-number entry = intentional override (still server-validated & audited)
+    const proceed = window.confirm(
+      `Send a manual challenge invitation to ${data.full_name}? ` +
+      `Progression-range checks will be bypassed but logged.`
+    );
+    if (!proceed) return;
+    handleSelectPlayer(data, true);
   };
+
 
   const acceptInvitation = async (inv: any) => {
     // Accept invitation
@@ -730,7 +691,14 @@ const StudentChallenge = () => {
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-semibold text-foreground truncate">{s.full_name}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono">{s.registration_number}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] text-muted-foreground font-mono">{s.registration_number}</p>
+                    {typeof s.lesson_position === "number" && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono">
+                        L{s.lesson_position}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className={`w-2 h-2 rounded-full ${s.is_online ? "bg-green-500" : "bg-muted-foreground/30"}`} />
