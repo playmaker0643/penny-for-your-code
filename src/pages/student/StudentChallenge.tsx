@@ -691,7 +691,14 @@ const StudentChallenge = () => {
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-semibold text-foreground truncate">{s.full_name}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono">{s.registration_number}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] text-muted-foreground font-mono">{s.registration_number}</p>
+                    {typeof s.lesson_position === "number" && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono">
+                        L{s.lesson_position}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className={`w-2 h-2 rounded-full ${s.is_online ? "bg-green-500" : "bg-muted-foreground/30"}`} />
