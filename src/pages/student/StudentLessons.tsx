@@ -381,12 +381,28 @@ const StudentLessons = () => {
                 <div className="text-sm text-foreground whitespace-pre-wrap bg-muted p-3 rounded-lg">{activeLesson.content}</div>
               ) : null}
 
+              {activeLesson && practicalsCountFor(activeLesson.id).length > 0 && (
+                <Button onClick={() => setShowPracticals(true)} variant="outline"
+                  className="w-full font-mono font-bold border-primary/40">
+                  <Target className="h-4 w-4 mr-2" />
+                  PRACTICALS ({practicalsPassedCountFor(activeLesson.id)}/{practicalsCountFor(activeLesson.id).length})
+                </Button>
+              )}
+
               {!isCompleted(activeLesson?.id) && (
                 <Button onClick={handleDone} className="w-full glow-btn bg-primary text-primary-foreground hover:bg-primary/90 font-mono font-bold">
                   DONE
                 </Button>
               )}
             </div>
+
+            {activeLesson && (
+              <LessonPracticals
+                lessonId={activeLesson.id}
+                open={showPracticals}
+                onClose={() => setShowPracticals(false)}
+              />
+            )}
 
             {/* AI Chat FAB */}
             <button
