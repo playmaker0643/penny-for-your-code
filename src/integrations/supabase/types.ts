@@ -293,6 +293,9 @@ export type Database = {
           course_id: string
           created_at: string
           id: string
+          lesson_ids: string[]
+          max_level: number
+          min_level: number
           options: string[] | null
           question_text: string
           question_type: Database["public"]["Enums"]["challenge_question_type"]
@@ -302,6 +305,9 @@ export type Database = {
           course_id: string
           created_at?: string
           id?: string
+          lesson_ids?: string[]
+          max_level?: number
+          min_level?: number
           options?: string[] | null
           question_text: string
           question_type?: Database["public"]["Enums"]["challenge_question_type"]
@@ -311,6 +317,9 @@ export type Database = {
           course_id?: string
           created_at?: string
           id?: string
+          lesson_ids?: string[]
+          max_level?: number
+          min_level?: number
           options?: string[] | null
           question_text?: string
           question_type?: Database["public"]["Enums"]["challenge_question_type"]
@@ -1957,6 +1966,9 @@ export type Database = {
           course_id: string
           created_at: string
           id: string
+          lesson_ids: string[]
+          max_level: number
+          min_level: number
           options: string[] | null
           question_text: string
           question_type: Database["public"]["Enums"]["challenge_question_type"]
@@ -2040,6 +2052,27 @@ export type Database = {
       check_challenge_answer: {
         Args: { _answer: string; _qid: string }
         Returns: boolean
+      }
+      eligible_challenge_questions: {
+        Args: { _course?: string; _user: string }
+        Returns: {
+          correct_answer: string
+          course_id: string
+          created_at: string
+          id: string
+          lesson_ids: string[]
+          max_level: number
+          min_level: number
+          options: string[] | null
+          question_text: string
+          question_type: Database["public"]["Enums"]["challenge_question_type"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "challenge_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       find_user_by_email_or_reg: { Args: { _input: string }; Returns: string }
       get_my_profile: {
