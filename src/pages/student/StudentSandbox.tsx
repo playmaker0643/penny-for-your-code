@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Play, RotateCcw, Copy, Maximize2, X } from "lucide-react";
+import { Play, RotateCcw, Copy, Maximize2, X, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,7 +76,16 @@ const StudentSandbox = () => {
     toast.success("Code copied!");
   };
 
-  const cancelRun = () => { setOutput(""); toast.success("Cleared"); };
+  const clearCode = () => {
+    if (language === "html") {
+      setHtmlCode("");
+      setCssCode("");
+      setJsCode("");
+    } else {
+      setSingleCode("");
+    }
+    toast.success("Code cleared");
+  };
 
   const runCode = async () => {
     if (language === "html") {
@@ -199,8 +208,8 @@ const StudentSandbox = () => {
             <Button onClick={runCode} disabled={isRunning} className="glow-btn bg-primary text-primary-foreground hover:bg-primary/90">
               <Play className="h-4 w-4 mr-2" /> {isRunning ? "Running..." : "Run"}
             </Button>
-            <Button onClick={cancelRun} variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10">
-              <X className="h-4 w-4 mr-2" /> Cancel
+            <Button onClick={clearCode} variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+              <Eraser className="h-4 w-4 mr-2" /> Clear Code
             </Button>
           </div>
         </div>
