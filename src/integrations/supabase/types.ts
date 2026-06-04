@@ -2101,6 +2101,10 @@ export type Database = {
         Args: { _answer: string; _qid: string }
         Returns: boolean
       }
+      check_lesson_answer: {
+        Args: { _answer: string; _qid: string }
+        Returns: boolean
+      }
       discover_challenge_peers: {
         Args: { _course: string }
         Returns: {
