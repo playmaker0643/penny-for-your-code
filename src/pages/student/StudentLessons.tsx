@@ -1,6 +1,8 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Play, Lock, CheckCircle, Unlock, Bot, Send, X } from "lucide-react";
+import { Play, Lock, CheckCircle, Unlock, Bot, Send, X, Trophy, Target } from "lucide-react";
+import LessonPracticals from "@/components/lessons/LessonPracticals";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +22,7 @@ const StudentLessons = () => {
   const queryClient = useQueryClient();
   const [activeLesson, setActiveLesson] = useState<any>(null);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showPracticals, setShowPracticals] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizResult, setQuizResult] = useState<{ passed: boolean; score: number } | null>(null);
   const [showChat, setShowChat] = useState(false);
@@ -65,6 +68,46 @@ const StudentLessons = () => {
     enabled: !!user,
   });
 
+  // Practicals required per lesson
+  const { data: lessonPracticals } = useQuery({
+    queryKey: ["all-lesson-practicals"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("lesson_practicals")
+        .select("id, lesson_id, required");
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // User submissions for gating
+  const { data: passedSubs } = useQuery({
+    queryKey: ["passed-submissions", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("practical_submissions")
+        .select("practical_id")
+        .eq("user_id", user!.id)
+        .eq("passed", true);
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // XP summary
+  const { data: xpRow } = useQuery({
+    queryKey: ["user-xp", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_xp")
+        .select("xp, level, current_streak, practicals_passed")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const { data: questions } = useQuery({
     queryKey: ["lesson-questions", activeLesson?.id],
     queryFn: async () => {
@@ -103,13 +146,25 @@ const StudentLessons = () => {
     return p?.completed_at;
   };
 
+  const passedSet = new Set((passedSubs || []).map((s: any) => s.practical_id));
+  const practicalsRequiredFor = (lessonId: string) =>
+    (lessonPracticals || []).filter((p: any) => p.lesson_id === lessonId && p.required);
+  const allPracticalsPassed = (lessonId: string) => {
+    const req = practicalsRequiredFor(lessonId);
+    if (req.length === 0) return true;
+    return req.every((p: any) => passedSet.has(p.id));
+  };
+  const practicalsCountFor = (lessonId: string) =>
+    (lessonPracticals || []).filter((p: any) => p.lesson_id === lessonId);
+  const practicalsPassedCountFor = (lessonId: string) =>
+    practicalsCountFor(lessonId).filter((p: any) => passedSet.has(p.id)).length;
+
   const getLessonStatus = (lesson: any, index: number, courseLessons: any[]) => {
     if (isCompleted(lesson.id)) return "completed";
-    // First lesson of course or previous completed
     if (index === 0) return "unlocked";
     const prevLesson = courseLessons[index - 1];
     if (!isCompleted(prevLesson.id)) return "locked";
-    // Check if previous was completed today (next day rule)
+    if (!allPracticalsPassed(prevLesson.id)) return "locked_practicals";
     const completedAt = getCompletedAt(prevLesson.id);
     if (completedAt) {
       const completedDate = new Date(completedAt).toDateString();
@@ -227,7 +282,16 @@ const StudentLessons = () => {
         </div>
       ) : (
       <div>
-        <h1 className="text-2xl font-bold font-display text-foreground mb-6">Lessons</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold font-display text-foreground">Lessons</h1>
+          {xpRow && (
+            <div className="flex items-center gap-2 text-xs font-mono">
+              <Badge variant="outline" className="gap-1"><Trophy className="h-3 w-3 text-primary" /> {xpRow.xp} XP</Badge>
+              <Badge variant="outline">Lv {xpRow.level}</Badge>
+              {xpRow.current_streak > 0 && <Badge variant="outline">🔥 {xpRow.current_streak}d</Badge>}
+            </div>
+          )}
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-32">
@@ -240,6 +304,8 @@ const StudentLessons = () => {
                 <p className="text-sm font-mono text-primary">{group.courseName}</p>
                 {group.items.map((lesson, idx) => {
                   const status = getLessonStatus(lesson, idx, group.items);
+                  const pracCount = practicalsCountFor(lesson.id).length;
+                  const pracPassed = practicalsPassedCountFor(lesson.id);
                   return (
                     <div
                       key={lesson.id}
@@ -251,10 +317,12 @@ const StudentLessons = () => {
                           setChatMessages([]);
                         } else if (status === "locked_until_tomorrow") {
                           toast.info("This lesson unlocks tomorrow!");
+                        } else if (status === "locked_practicals") {
+                          toast.info("Complete the previous lesson's required practicals to unlock this.");
                         }
                       }}
                       className={`cyber-card rounded-xl p-4 flex items-center gap-3 transition-colors ${
-                        status === "locked" || status === "locked_until_tomorrow"
+                        status === "locked" || status === "locked_until_tomorrow" || status === "locked_practicals"
                           ? "opacity-50 cursor-not-allowed"
                           : "cursor-pointer hover:border-primary/40"
                       }`}
@@ -264,16 +332,23 @@ const StudentLessons = () => {
                           <CheckCircle className="h-5 w-5 text-green-500" />
                         ) : status === "unlocked" ? (
                           <Unlock className="h-4 w-4 text-primary" />
+                        ) : status === "locked_practicals" ? (
+                          <Target className="h-4 w-4 text-yellow-500" />
                         ) : (
                           <Lock className="h-4 w-4 text-muted-foreground" />
                         )}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-foreground text-sm truncate">{lesson.title}</h3>
                         {lesson.courses && (
                           <p className="text-xs text-primary font-mono">{(lesson.courses as any).title}</p>
                         )}
                       </div>
+                      {pracCount > 0 && (
+                        <Badge variant="outline" className="text-[10px] gap-1 shrink-0">
+                          <Target className="h-3 w-3" /> {pracPassed}/{pracCount}
+                        </Badge>
+                      )}
                     </div>
                   );
                 })}
@@ -306,12 +381,28 @@ const StudentLessons = () => {
                 <div className="text-sm text-foreground whitespace-pre-wrap bg-muted p-3 rounded-lg">{activeLesson.content}</div>
               ) : null}
 
+              {activeLesson && practicalsCountFor(activeLesson.id).length > 0 && (
+                <Button onClick={() => setShowPracticals(true)} variant="outline"
+                  className="w-full font-mono font-bold border-primary/40">
+                  <Target className="h-4 w-4 mr-2" />
+                  PRACTICALS ({practicalsPassedCountFor(activeLesson.id)}/{practicalsCountFor(activeLesson.id).length})
+                </Button>
+              )}
+
               {!isCompleted(activeLesson?.id) && (
                 <Button onClick={handleDone} className="w-full glow-btn bg-primary text-primary-foreground hover:bg-primary/90 font-mono font-bold">
                   DONE
                 </Button>
               )}
             </div>
+
+            {activeLesson && (
+              <LessonPracticals
+                lessonId={activeLesson.id}
+                open={showPracticals}
+                onClose={() => setShowPracticals(false)}
+              />
+            )}
 
             {/* AI Chat FAB */}
             <button

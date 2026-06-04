@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { Upload, Plus, Trash2, Eye, Code, FileText, CheckCircle, Sparkles, Loader2 } from "lucide-react";
+import { Upload, Plus, Trash2, Eye, Code, FileText, CheckCircle, Sparkles, Loader2, Target } from "lucide-react";
+import AdminPracticalManager from "@/components/admin/AdminPracticalManager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,7 @@ const AdminLessons = () => {
   const [codeMode, setCodeMode] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [viewLesson, setViewLesson] = useState<any>(null);
+  const [practicalLesson, setPracticalLesson] = useState<any>(null);
   const [richContent, setRichContent] = useState("");
   const [form, setForm] = useState({
     course_id: "",
@@ -527,6 +529,13 @@ const AdminLessons = () => {
                       </div>
                     </div>
                     <button
+                      onClick={(e) => { e.stopPropagation(); setPracticalLesson(lesson); }}
+                      className="text-primary/70 hover:text-primary transition-colors shrink-0 mt-1"
+                      title="Manage practicals"
+                    >
+                      <Target className="h-5 w-5" />
+                    </button>
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (confirm("Delete this lesson?")) deleteLesson.mutate(lesson.id);
@@ -549,6 +558,14 @@ const AdminLessons = () => {
               <Plus className="h-4 w-4 mr-1" /> ADD LESSON
             </Button>
           </div>
+        )}
+        {practicalLesson && (
+          <AdminPracticalManager
+            lessonId={practicalLesson.id}
+            lessonTitle={practicalLesson.title}
+            open={!!practicalLesson}
+            onClose={() => setPracticalLesson(null)}
+          />
         )}
       </div>
     </AdminLayout>

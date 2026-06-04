@@ -745,6 +745,106 @@ export type Database = {
           },
         ]
       }
+      lesson_engagement: {
+        Row: {
+          id: string
+          interactions: number
+          last_ping: string
+          lesson_id: string
+          seconds_active: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          interactions?: number
+          last_ping?: string
+          lesson_id: string
+          seconds_active?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          interactions?: number
+          last_ping?: string
+          lesson_id?: string
+          seconds_active?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_engagement_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_practicals: {
+        Row: {
+          created_at: string
+          difficulty: string
+          hidden_tests: Json
+          id: string
+          language: string
+          lesson_id: string
+          min_engagement_seconds: number
+          order_index: number
+          prompt: string
+          reference_solution: string | null
+          required: boolean
+          starter_code: string | null
+          title: string
+          updated_at: string
+          visible_tests: Json
+          xp_reward: number
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          hidden_tests?: Json
+          id?: string
+          language?: string
+          lesson_id: string
+          min_engagement_seconds?: number
+          order_index?: number
+          prompt: string
+          reference_solution?: string | null
+          required?: boolean
+          starter_code?: string | null
+          title: string
+          updated_at?: string
+          visible_tests?: Json
+          xp_reward?: number
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          hidden_tests?: Json
+          id?: string
+          language?: string
+          lesson_id?: string
+          min_engagement_seconds?: number
+          order_index?: number
+          prompt?: string
+          reference_solution?: string | null
+          required?: boolean
+          starter_code?: string | null
+          title?: string
+          updated_at?: string
+          visible_tests?: Json
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_practicals_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           ai_questions_date: string | null
@@ -1376,6 +1476,84 @@ export type Database = {
         }
         Relationships: []
       }
+      practical_submissions: {
+        Row: {
+          attempt_number: number
+          code: string
+          created_at: string
+          feedback: string | null
+          hidden_passed: number
+          hint_level: number
+          id: string
+          lesson_id: string
+          passed: boolean
+          plagiarism_score: number | null
+          practical_id: string
+          runtime_ms: number | null
+          score: number
+          suspicious: boolean
+          time_spent_seconds: number
+          total_tests: number
+          user_id: string
+          visible_passed: number
+        }
+        Insert: {
+          attempt_number?: number
+          code: string
+          created_at?: string
+          feedback?: string | null
+          hidden_passed?: number
+          hint_level?: number
+          id?: string
+          lesson_id: string
+          passed?: boolean
+          plagiarism_score?: number | null
+          practical_id: string
+          runtime_ms?: number | null
+          score?: number
+          suspicious?: boolean
+          time_spent_seconds?: number
+          total_tests?: number
+          user_id: string
+          visible_passed?: number
+        }
+        Update: {
+          attempt_number?: number
+          code?: string
+          created_at?: string
+          feedback?: string | null
+          hidden_passed?: number
+          hint_level?: number
+          id?: string
+          lesson_id?: string
+          passed?: boolean
+          plagiarism_score?: number | null
+          practical_id?: string
+          runtime_ms?: number | null
+          score?: number
+          suspicious?: boolean
+          time_spent_seconds?: number
+          total_tests?: number
+          user_id?: string
+          visible_passed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practical_submissions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practical_submissions_practical_id_fkey"
+            columns: ["practical_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_practicals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_locked: boolean
@@ -1728,6 +1906,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_xp: {
+        Row: {
+          badges: Json
+          current_streak: number
+          last_activity_date: string | null
+          level: number
+          longest_streak: number
+          practicals_attempted: number
+          practicals_passed: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          badges?: Json
+          current_streak?: number
+          last_activity_date?: string | null
+          level?: number
+          longest_streak?: number
+          practicals_attempted?: number
+          practicals_passed?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          badges?: Json
+          current_streak?: number
+          last_activity_date?: string | null
+          level?: number
+          longest_streak?: number
+          practicals_attempted?: number
+          practicals_passed?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1799,6 +2016,27 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      award_xp: {
+        Args: { _amount: number; _passed: boolean }
+        Returns: {
+          badges: Json
+          current_streak: number
+          last_activity_date: string | null
+          level: number
+          longest_streak: number
+          practicals_attempted: number
+          practicals_passed: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_xp"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       check_challenge_answer: {
         Args: { _answer: string; _qid: string }
         Returns: boolean
@@ -1858,6 +2096,10 @@ export type Database = {
       }
       is_chat_member: {
         Args: { _chat_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_lesson_practical_complete: {
+        Args: { _lesson: string; _user: string }
         Returns: boolean
       }
       start_admin_chat: { Args: never; Returns: string }
