@@ -529,6 +529,13 @@ const AdminLessons = () => {
                       </div>
                     </div>
                     <button
+                      onClick={(e) => { e.stopPropagation(); setPracticalLesson(lesson); }}
+                      className="text-primary/70 hover:text-primary transition-colors shrink-0 mt-1"
+                      title="Manage practicals"
+                    >
+                      <Target className="h-5 w-5" />
+                    </button>
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (confirm("Delete this lesson?")) deleteLesson.mutate(lesson.id);
