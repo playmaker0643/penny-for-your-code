@@ -22,6 +22,7 @@ const StudentLessons = () => {
   const queryClient = useQueryClient();
   const [activeLesson, setActiveLesson] = useState<any>(null);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showPracticals, setShowPracticals] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizResult, setQuizResult] = useState<{ passed: boolean; score: number } | null>(null);
   const [showChat, setShowChat] = useState(false);
