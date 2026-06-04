@@ -364,9 +364,7 @@ const StudentChallenge = () => {
         if (updated.status === "accepted") {
           toast.success(`${p.full_name} accepted! Starting...`);
           supabase.removeChannel(channel);
-          await supabase.from("challenge_matches").update({
-            status: "active", accepted_at: new Date().toISOString(),
-          }).eq("id", row.match_id);
+          await supabase.rpc("accept_match", { _match_id: row.match_id });
           await loadQuestionsFromIds(questionIds);
           setCurrentQ(0);
           setMyScore(0);
@@ -430,10 +428,8 @@ const StudentChallenge = () => {
 
     if (match) {
       setMatchId(match.id);
-      // Update match status to active
-      await supabase.from("challenge_matches").update({
-        status: "active", accepted_at: new Date().toISOString(),
-      }).eq("id", match.id);
+      // Mark match active server-side (validated)
+      await supabase.rpc("accept_match", { _match_id: match.id });
 
       const qIds = match.question_ids as string[];
       await loadQuestionsFromIds(qIds);
@@ -460,33 +456,35 @@ const StudentChallenge = () => {
   const handleAnswer = async () => {
     if (!selectedAnswer) return;
     const q = questions[currentQ];
-    const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
-    const isCorrect = !!correct;
-    setLastCorrect(isCorrect);
-    const newScore = isCorrect ? myScore + 1 : myScore;
-    if (isCorrect) setMyScore(newScore);
-    setAnswered(true);
 
-    // AI mode: simulate opponent
+    // AI mode: client-side grading only (no DB match)
     if (mode === "ai") {
+      const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
+      const isCorrect = !!correct;
+      setLastCorrect(isCorrect);
+      if (isCorrect) setMyScore(s => s + 1);
+      setAnswered(true);
       if (Math.random() < 0.5) setOpponentScore(s => s + 1);
       return;
     }
 
-    // Friend mode: update match in DB
+    // Friend mode: server-validated scoring (player cannot self-inflate score)
     if (matchId && user) {
-      const { data: match } = await supabase.from("challenge_matches").select("*").eq("id", matchId).single();
-      if (!match) return;
-      const amPlayerOne = match.player_one_id === user.id;
-      const updates: any = {};
-      if (amPlayerOne) {
-        updates.player_one_score = newScore;
-        updates.player_one_current_index = currentQ + 1;
-      } else {
-        updates.player_two_score = newScore;
-        updates.player_two_current_index = currentQ + 1;
-      }
-      await supabase.from("challenge_matches").update(updates).eq("id", matchId);
+      const { data, error } = await supabase.rpc("submit_match_answer", {
+        _match_id: matchId, _qid: q.id, _answer: selectedAnswer,
+      });
+      if (error) { toast.error(error.message); return; }
+      const result = data as { correct: boolean; my_score: number; my_index: number };
+      setLastCorrect(!!result.correct);
+      setMyScore(result.my_score);
+      setAnswered(true);
+    } else {
+      // Fallback (no match) — local grading
+      const { data: correct } = await supabase.rpc("check_challenge_answer", { _qid: q.id, _answer: selectedAnswer });
+      const isCorrect = !!correct;
+      setLastCorrect(isCorrect);
+      if (isCorrect) setMyScore(s => s + 1);
+      setAnswered(true);
     }
   };
 
@@ -498,24 +496,9 @@ const StudentChallenge = () => {
       setWinner(resolvedWinner);
       setStep("victory");
 
-      // Update match as completed
-      if (matchId && user) {
-        const { data: match } = await supabase.from("challenge_matches").select("*").eq("id", matchId).single();
-        if (match) {
-          const amPlayerOne = match.player_one_id === user.id;
-          let winnerId: string | null = null;
-          if (finalMyScore > finalOpponentScore) winnerId = user.id;
-          else if (finalOpponentScore > finalMyScore) winnerId = amPlayerOne ? match.player_two_id : match.player_one_id;
-          await supabase.from("challenge_matches").update({
-            status: "completed",
-            completed_at: new Date().toISOString(),
-            winner_id: winnerId,
-            ...(amPlayerOne
-              ? { player_one_score: finalMyScore, player_one_current_index: questions.length }
-              : { player_two_score: finalMyScore, player_two_current_index: questions.length }
-            ),
-          }).eq("id", matchId);
-        }
+      // Server-side finalization (computes winner from authoritative scores)
+      if (matchId && user && mode !== "ai") {
+        await supabase.rpc("finalize_match", { _match_id: matchId });
       }
       return;
     }
@@ -719,13 +702,8 @@ const StudentChallenge = () => {
   }
 
   const cancelWaiting = async () => {
-    // Cancel the invitation so it disappears from receiver's list
     if (matchId) {
-      const { data: match } = await supabase.from("challenge_matches").select("invitation_id").eq("id", matchId).single();
-      if (match?.invitation_id) {
-        await supabase.from("challenge_invitations").update({ status: "cancelled" }).eq("id", match.invitation_id);
-      }
-      await supabase.from("challenge_matches").update({ status: "cancelled" }).eq("id", matchId);
+      await supabase.rpc("cancel_match", { _match_id: matchId });
     }
     setMatchId(null);
     setStep("select-player");

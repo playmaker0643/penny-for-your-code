@@ -2007,6 +2007,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_match: { Args: { _match_id: string }; Returns: undefined }
       admin_list_challenge_questions: {
         Args: { _course_id: string }
         Returns: {
@@ -2097,6 +2098,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cancel_match: { Args: { _match_id: string }; Returns: undefined }
       check_challenge_answer: {
         Args: { _answer: string; _qid: string }
         Returns: boolean
@@ -2104,6 +2106,10 @@ export type Database = {
       check_lesson_answer: {
         Args: { _answer: string; _qid: string }
         Returns: boolean
+      }
+      create_quick_invite: {
+        Args: { _chat_id: string; _receiver: string }
+        Returns: string
       }
       discover_challenge_peers: {
         Args: { _course: string }
@@ -2135,6 +2141,32 @@ export type Database = {
           to: "challenge_questions"
           isOneToOne: false
           isSetofReturn: true
+        }
+      }
+      finalize_match: {
+        Args: { _match_id: string }
+        Returns: {
+          accepted_at: string | null
+          completed_at: string | null
+          course_id: string | null
+          created_at: string
+          id: string
+          invitation_id: string | null
+          player_one_current_index: number
+          player_one_id: string
+          player_one_score: number
+          player_two_current_index: number
+          player_two_id: string
+          player_two_score: number
+          question_ids: string[]
+          status: Database["public"]["Enums"]["challenge_status"]
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "challenge_matches"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       find_user_by_email_or_reg: { Args: { _input: string }; Returns: string }
@@ -2234,6 +2266,10 @@ export type Database = {
         }[]
       }
       start_admin_chat: { Args: never; Returns: string }
+      submit_match_answer: {
+        Args: { _answer: string; _match_id: string; _qid: string }
+        Returns: Json
+      }
       user_lesson_position: {
         Args: { _course: string; _user: string }
         Returns: number

@@ -25,8 +25,9 @@ const AttachmentMenu = ({ isOpen, onClose, userId, otherUserId, chatId, isDirect
 
   const createChallengeLink = async () => {
     if (!otherUserId) { toast.error("No user to challenge"); return; }
-    const { data: inv } = await supabase.from("challenge_invitations").insert({ sender_id: userId, receiver_id: otherUserId, chat_id: isDirectConversation ? null : chatId }).select().single();
-    if (inv) onSendMessage(`[challenge:${inv.id}]`);
+    const { data: invId, error } = await supabase.rpc("create_quick_invite", { _receiver: otherUserId, _chat_id: isDirectConversation ? null : chatId });
+    if (error || !invId) { toast.error(error?.message || "Could not send invite"); return; }
+    onSendMessage(`[challenge:${invId}]`);
     toast.success("Challenge invite sent!");
     onClose();
   };
