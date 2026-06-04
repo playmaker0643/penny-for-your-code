@@ -702,13 +702,8 @@ const StudentChallenge = () => {
   }
 
   const cancelWaiting = async () => {
-    // Cancel the invitation so it disappears from receiver's list
     if (matchId) {
-      const { data: match } = await supabase.from("challenge_matches").select("invitation_id").eq("id", matchId).single();
-      if (match?.invitation_id) {
-        await supabase.from("challenge_invitations").update({ status: "cancelled" }).eq("id", match.invitation_id);
-      }
-      await supabase.from("challenge_matches").update({ status: "cancelled" }).eq("id", matchId);
+      await supabase.rpc("cancel_match", { _match_id: matchId });
     }
     setMatchId(null);
     setStep("select-player");
