@@ -55,9 +55,9 @@
 
 
   :root {
-    --brand-gradient: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 91% 65%) 50%, hsl(292 84% 61%) 100%);
-    --brand-gradient-soft: linear-gradient(135deg, hsl(217 91% 60% / 0.18) 0%, hsl(270 91% 65% / 0.18) 50%, hsl(292 84% 61% / 0.18) 100%);
-    --brand-gradient-bg: linear-gradient(135deg, hsl(230 55% 7%) 0%, hsl(258 45% 10%) 50%, hsl(292 40% 9%) 100%);
+    --brand-gradient: linear-gradient(135deg, hsl(210 100% 56%) 0%, hsl(195 100% 50%) 100%);
+    --brand-gradient-soft: linear-gradient(135deg, hsl(210 100% 56% / 0.18) 0%, hsl(195 100% 50% / 0.18) 100%);
+    --brand-gradient-bg: linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 8%) 100%);
   }
 }
 
