@@ -146,13 +146,25 @@ const StudentLessons = () => {
     return p?.completed_at;
   };
 
+  const passedSet = new Set((passedSubs || []).map((s: any) => s.practical_id));
+  const practicalsRequiredFor = (lessonId: string) =>
+    (lessonPracticals || []).filter((p: any) => p.lesson_id === lessonId && p.required);
+  const allPracticalsPassed = (lessonId: string) => {
+    const req = practicalsRequiredFor(lessonId);
+    if (req.length === 0) return true;
+    return req.every((p: any) => passedSet.has(p.id));
+  };
+  const practicalsCountFor = (lessonId: string) =>
+    (lessonPracticals || []).filter((p: any) => p.lesson_id === lessonId);
+  const practicalsPassedCountFor = (lessonId: string) =>
+    practicalsCountFor(lessonId).filter((p: any) => passedSet.has(p.id)).length;
+
   const getLessonStatus = (lesson: any, index: number, courseLessons: any[]) => {
     if (isCompleted(lesson.id)) return "completed";
-    // First lesson of course or previous completed
     if (index === 0) return "unlocked";
     const prevLesson = courseLessons[index - 1];
     if (!isCompleted(prevLesson.id)) return "locked";
-    // Check if previous was completed today (next day rule)
+    if (!allPracticalsPassed(prevLesson.id)) return "locked_practicals";
     const completedAt = getCompletedAt(prevLesson.id);
     if (completedAt) {
       const completedDate = new Date(completedAt).toDateString();
