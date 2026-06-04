@@ -2194,6 +2194,27 @@ export type Database = {
         Args: { _lesson: string; _user: string }
         Returns: boolean
       }
+      pair_eligible_questions: {
+        Args: { _course: string; _me: string; _opp: string }
+        Returns: {
+          correct_answer: string
+          course_id: string
+          created_at: string
+          id: string
+          lesson_ids: string[]
+          max_level: number
+          min_level: number
+          options: string[] | null
+          question_text: string
+          question_type: Database["public"]["Enums"]["challenge_question_type"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "challenge_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       request_challenge: {
         Args: {
           _course: string

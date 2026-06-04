@@ -299,22 +299,23 @@ const StudentChallenge = () => {
     };
     setOpponent(opp);
 
-    // Fetch eligible questions (level-gated) and create match via secure RPC
-    const { data: allQ } = await supabase
-      .from("challenge_questions")
-      .select("id")
-      .eq("course_id", selectedCourseId);
+    // Server-side picks questions fair to the LOWER lesson position between both players.
+    const { data: allQ, error: poolErr } = await supabase.rpc("pair_eligible_questions", {
+      _me: user!.id,
+      _opp: p.user_id,
+      _course: selectedCourseId,
+    });
 
-    if (!allQ || allQ.length === 0) {
-      toast.error("No challenge questions for this course");
+    if (poolErr || !allQ || allQ.length === 0) {
+      toast.error("No fair challenge questions are available for both players' progression yet");
       return;
     }
 
     const seed = `${user!.id}-${p.user_id}-${Date.now()}`;
-    const picked = pickChallengeQuestions(allQ, seed, 10);
-    const questionIds = picked.map(q => q.id);
+    const picked = pickChallengeQuestions(allQ as any[], seed, 10);
+    const questionIds = picked.map((q: any) => q.id);
 
-    // Validated server-side: course enrolment, lesson range, IDOR protection
+    // Validated server-side: course enrolment, lesson range, lower-lesson scope, IDOR protection
     const { data: rpcRows, error: rpcErr } = await supabase.rpc("request_challenge", {
       _receiver: p.user_id,
       _course: selectedCourseId,
@@ -329,10 +330,12 @@ const StudentChallenge = () => {
       return;
     }
     if (row.warning) toast.warning(row.warning);
+    else toast.success("Challenge balanced for both players' lesson progression");
 
     setMatchId(row.match_id);
     toast.success(`Challenge sent to ${p.full_name}! Waiting...`);
     setStep("waiting");
+
 
     // Push notify the opponent
     try {
