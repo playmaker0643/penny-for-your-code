@@ -364,9 +364,7 @@ const StudentChallenge = () => {
         if (updated.status === "accepted") {
           toast.success(`${p.full_name} accepted! Starting...`);
           supabase.removeChannel(channel);
-          await supabase.from("challenge_matches").update({
-            status: "active", accepted_at: new Date().toISOString(),
-          }).eq("id", row.match_id);
+          await supabase.rpc("accept_match", { _match_id: row.match_id });
           await loadQuestionsFromIds(questionIds);
           setCurrentQ(0);
           setMyScore(0);
