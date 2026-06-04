@@ -559,6 +559,14 @@ const AdminLessons = () => {
             </Button>
           </div>
         )}
+        {practicalLesson && (
+          <AdminPracticalManager
+            lessonId={practicalLesson.id}
+            lessonTitle={practicalLesson.title}
+            open={!!practicalLesson}
+            onClose={() => setPracticalLesson(null)}
+          />
+        )}
       </div>
     </AdminLayout>
   );
