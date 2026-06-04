@@ -327,7 +327,7 @@ const StudentVideoCall = () => {
 
   const sendChallengeInvite = async () => {
     if (!callInfo?.otherUserId || !user) return;
-    await supabase.from("challenge_invitations").insert({ sender_id: user.id, receiver_id: callInfo.otherUserId, chat_id: callInfo.chat_id });
+    await supabase.rpc("create_quick_invite", { _receiver: callInfo.otherUserId, _chat_id: callInfo.chat_id });
     toast.success("Challenge invite sent!");
   };
 
