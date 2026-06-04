@@ -120,42 +120,10 @@ const StudentChallenge = () => {
   const { data: courseStudents } = useQuery({
     queryKey: ["course-students-challenge", selectedCourseId],
     queryFn: async () => {
-      // Get enrolled students for this course
-      const { data: enrollments } = await supabase
-        .from("enrollments")
-        .select("user_id")
-        .eq("course_id", selectedCourseId);
-      
-      const enrolledIds = (enrollments || []).map((e: any) => e.user_id).filter((id: string) => id !== user!.id);
-      
-      if (enrolledIds.length === 0) {
-        // Fallback: show all non-admin students
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, registration_number, country")
-          .neq("user_id", user!.id);
-        const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-        const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
-        const students = (profiles || []).filter((p: any) => !adminIds.has(p.user_id));
-        const ids = students.map((p: any) => p.user_id);
-        const { data: presences } = await supabase.from("user_presence").select("user_id, is_online").in("user_id", ids.length > 0 ? ids : ["none"]);
-        const onlineMap = new Map((presences || []).map((p: any) => [p.user_id, p.is_online]));
-        return students.map((p: any) => ({ ...p, is_online: onlineMap.get(p.user_id) || false }));
-      }
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, registration_number, country")
-        .in("user_id", enrolledIds);
-
-      const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-      const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
-      const students = (profiles || []).filter((p: any) => !adminIds.has(p.user_id));
-
-      const ids = students.map((p: any) => p.user_id);
-      const { data: presences } = await supabase.from("user_presence").select("user_id, is_online").in("user_id", ids.length > 0 ? ids : ["none"]);
-      const onlineMap = new Map((presences || []).map((p: any) => [p.user_id, p.is_online]));
-      return students.map((p: any) => ({ ...p, is_online: onlineMap.get(p.user_id) || false }));
+      if (!selectedCourseId) return [];
+      const { data, error } = await supabase.rpc("discover_challenge_peers", { _course: selectedCourseId });
+      if (error) { console.warn("discover_challenge_peers", error); return []; }
+      return data || [];
     },
     enabled: !!selectedCourseId && step === "select-player",
   });
