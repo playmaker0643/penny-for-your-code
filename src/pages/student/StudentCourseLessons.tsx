@@ -194,34 +194,36 @@ const StudentCourseLessons = () => {
     setQuizAnswers({});
   };
 
-  const submitQuiz = () => {
+  const submitQuiz = async () => {
     if (!questions || questions.length === 0) {
       markComplete.mutate();
       return;
     }
-    let correct = 0;
-    questions.forEach((q: any) => {
-      const answer = (quizAnswers[q.id] || "").trim().toLowerCase();
-      const expected = q.correct_answer.trim().toLowerCase();
-      if (answer === expected) correct++;
-    });
+    const results = await Promise.all(
+      questions.map(async (q: any) => {
+        const ans = quizAnswers[q.id] || "";
+        const { data } = await supabase.rpc("check_lesson_answer", { _qid: q.id, _answer: ans });
+        return { q, ans, correct: !!data };
+      })
+    );
+    const correct = results.filter((r) => r.correct).length;
     const score = Math.round((correct / questions.length) * 100);
     const passed = score >= 80;
     setQuizResult({ passed, score });
     if (passed) {
-      questions.forEach((q: any) => {
-        const answer = (quizAnswers[q.id] || "").trim().toLowerCase();
+      results.forEach(({ q, ans, correct }) => {
         supabase.from("lesson_question_attempts").insert({
           user_id: user!.id,
           lesson_id: activeLesson.id,
           question_id: q.id,
-          answer: quizAnswers[q.id] || "",
-          correct: answer === q.correct_answer.trim().toLowerCase(),
+          answer: ans,
+          correct,
         });
       });
       markComplete.mutate();
     }
   };
+
 
   const sendChatMessage = async () => {
     if (!chatInput.trim() || !aiUsage?.canAsk) return;
