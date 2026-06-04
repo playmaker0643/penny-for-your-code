@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { Upload, Plus, Trash2, Eye, Code, FileText, CheckCircle, Sparkles, Loader2 } from "lucide-react";
+import { Upload, Plus, Trash2, Eye, Code, FileText, CheckCircle, Sparkles, Loader2, Target } from "lucide-react";
+import AdminPracticalManager from "@/components/admin/AdminPracticalManager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
