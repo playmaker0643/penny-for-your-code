@@ -1,13 +1,13 @@
 {
-  "name": "Codebreakers E-Learning",
-  "short_name": "Codebreakers",
+  "name": "CodeBreakers E-Learning",
+  "short_name": "CodeBreakers",
   "description": "From zero to hero in web development and cybersecurity.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0F172A",
-  "theme_color": "#0F172A",
+  "background_color": "#0A0F2E",
+  "theme_color": "#A855F7",
   "categories": ["education", "productivity"],
   "icons": [
     { "src": "/icon-512.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
