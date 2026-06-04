@@ -1,6 +1,8 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Play, Lock, CheckCircle, Unlock, Bot, Send, X } from "lucide-react";
+import { Play, Lock, CheckCircle, Unlock, Bot, Send, X, Trophy, Target } from "lucide-react";
+import LessonPracticals from "@/components/lessons/LessonPracticals";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
