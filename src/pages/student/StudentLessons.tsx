@@ -68,6 +68,46 @@ const StudentLessons = () => {
     enabled: !!user,
   });
 
+  // Practicals required per lesson
+  const { data: lessonPracticals } = useQuery({
+    queryKey: ["all-lesson-practicals"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("lesson_practicals")
+        .select("id, lesson_id, required");
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // User submissions for gating
+  const { data: passedSubs } = useQuery({
+    queryKey: ["passed-submissions", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("practical_submissions")
+        .select("practical_id")
+        .eq("user_id", user!.id)
+        .eq("passed", true);
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // XP summary
+  const { data: xpRow } = useQuery({
+    queryKey: ["user-xp", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_xp")
+        .select("xp, level, current_streak, practicals_passed")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const { data: questions } = useQuery({
     queryKey: ["lesson-questions", activeLesson?.id],
     queryFn: async () => {
