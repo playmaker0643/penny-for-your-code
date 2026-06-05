@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BrandedLoader from "@/components/BrandedLoader";
+import RouteErrorBoundary from "@/components/RouteErrorBoundary";
+import { lazyWithRetry as lazy } from "@/lib/lazyWithRetry";
 
 // Eagerly load landing page for fastest first paint
 import Index from "./pages/Index";
@@ -102,7 +104,8 @@ const App = () => (
             <NotificationBootstrap />
             <FloatingNotificationBell />
           </Suspense>
-          <Suspense fallback={<RouteFallback />}>
+          <RouteErrorBoundary>
+            <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
@@ -162,6 +165,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </RouteErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
