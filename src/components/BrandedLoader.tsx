@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/codebreakers-logo.jpg.asset.json";
+const logoAsset = { url: "/codebreakers-logo.jpg" };
 
 export default function BrandedLoader({ label = "Loading..." }: { label?: string }) {
   return (

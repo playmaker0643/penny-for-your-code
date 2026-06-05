@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logoAsset from "@/assets/codebreakers-logo.jpg.asset.json";
+const logoAsset = { url: "/codebreakers-logo.jpg" };
 
 const Logo = ({ className = "", showText = true }: { className?: string; showText?: boolean }) => (
   <Link to="/" className={`flex items-center gap-2 ${className}`}>
