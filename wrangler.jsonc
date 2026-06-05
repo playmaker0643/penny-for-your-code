@@ -1,0 +1,26 @@
+{
+  // Cloudflare Workers config — PUBLIC-SAFE values only.
+  // All sensitive values are injected via `wrangler secret put` (see README / commands below).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "your-worker-name",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ---------------------------------------------------------------------------
+  // PUBLIC vars — safe to commit. These are readable by anyone who inspects
+  // your deployed Worker bundle or your repo. Do NOT put secrets here.
+  // ---------------------------------------------------------------------------
+  "vars": {
+    "SUPABASE_URL": "https://eajycztovliynokldcfs.supabase.co",
+    "SUPABASE_PROJECT_ID": "eajycztovliynokldcfs",
+    // Supabase anon/publishable key is designed to be public — RLS protects data.
+    "SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhanljenRvdmxpeW5va2xkY2ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDU2MjEsImV4cCI6MjA5NTg4MTYyMX0.TZolUzXgcg9lQiVk2hdvzpfSj7gL5pVVAiwux-piP1A",
+    // Mirror under the legacy ANON_KEY name if any code expects it:
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhanljenRvdmxpeW5va2xkY2ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDU2MjEsImV4cCI6MjA5NTg4MTYyMX0.TZolUzXgcg9lQiVk2hdvzpfSj7gL5pVVAiwux-piP1A"
+  }
+
+  // Secrets are NOT declared here. They are set with `wrangler secret put NAME`
+  // and accessed in code via `env.NAME` (Workers) — never via process.env in a
+  // way that round-trips to the client.
+}
