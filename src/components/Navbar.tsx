@@ -23,7 +23,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-nav">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo left - not clickable */}
         <div className="flex items-center gap-2">
