@@ -6,6 +6,10 @@ const Logo = ({ className = "", showText = true }: { className?: string; showTex
     <img
       src={logoAsset.url}
       alt="CodeBreakers"
+      width={36}
+      height={36}
+      decoding="async"
+      fetchPriority="high"
       className="h-9 w-9 rounded-lg object-cover shadow-[0_0_18px_hsl(var(--primary)/0.45)]"
     />
     {showText && (
