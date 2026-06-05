@@ -96,11 +96,27 @@
     background: var(--brand-gradient-bg);
     background-attachment: fixed;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11", "kern";
+    letter-spacing: -0.005em;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+    letter-spacing: -0.022em;
+    line-height: 1.12;
+    font-feature-settings: "ss01", "kern", "calt";
   }
+  h1 { letter-spacing: -0.03em; }
+  p { line-height: 1.65; }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+    color: hsl(var(--foreground));
+  }
+
 
   /* Fix mobile keyboard not appearing on inputs */
   input, textarea, select, [contenteditable] {
