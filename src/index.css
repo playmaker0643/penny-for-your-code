@@ -200,19 +200,28 @@
     background-size: 200% 200% !important;
     background-position: 0% 50% !important;
     color: hsl(var(--primary-foreground)) !important;
-    box-shadow: 0 0 12px hsl(var(--primary) / 0.2);
-    transition: background-position 0.5s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    box-shadow:
+      0 1px 0 hsl(210 40% 100% / 0.12) inset,
+      0 8px 24px -8px hsl(var(--primary) / 0.45),
+      0 1px 2px hsl(222 47% 2% / 0.4);
+    transition:
+      background-position 0.7s var(--ease-cinematic),
+      box-shadow 0.45s var(--ease-cinematic),
+      transform 0.35s var(--ease-cinematic);
   }
 
   .glow-btn:hover {
     background-position: 100% 50% !important;
-    box-shadow: 0 0 16px hsl(var(--primary) / 0.28);
+    box-shadow:
+      0 1px 0 hsl(210 40% 100% / 0.18) inset,
+      0 14px 36px -10px hsl(var(--primary) / 0.55),
+      0 2px 4px hsl(222 47% 2% / 0.45);
     transform: translateY(-1px);
   }
 
   .hover-gradient {
     position: relative;
-    transition: color 0.3s ease, background 0.35s ease, box-shadow 0.35s ease, transform 0.2s ease;
+    transition: color 0.4s var(--ease-cinematic), background 0.45s var(--ease-cinematic), box-shadow 0.45s var(--ease-cinematic), transform 0.35s var(--ease-cinematic);
   }
   .hover-gradient:hover {
     background: var(--brand-gradient) !important;
@@ -227,15 +236,87 @@
   }
 
   .hover-gradient-border {
-    transition: border-color 0.3s ease, box-shadow 0.35s ease, transform 0.2s ease;
+    transition: border-color 0.4s var(--ease-soft), box-shadow 0.45s var(--ease-cinematic), transform 0.35s var(--ease-cinematic);
   }
   .hover-gradient-border:hover {
     border-image: var(--brand-gradient) 1;
   }
 
+  /* ---------- Premium surface system ---------- */
+
+  .glass-panel {
+    background: linear-gradient(180deg, hsl(222 45% 12% / 0.62), hsl(222 45% 10% / 0.55));
+    border: 1px solid hsl(210 40% 100% / 0.07);
+    box-shadow:
+      var(--shadow-md),
+      var(--highlight-top);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+  }
+
+  .glass-nav {
+    background: linear-gradient(180deg, hsl(222 47% 7% / 0.72), hsl(222 47% 7% / 0.55));
+    border-bottom: 1px solid hsl(210 40% 100% / 0.06);
+    box-shadow: 0 1px 0 hsl(210 40% 100% / 0.04) inset, 0 8px 24px -16px hsl(222 47% 2% / 0.6);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  }
+
+  .glass-overlay {
+    background: hsl(222 47% 5% / 0.55);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  .elevate-sm { box-shadow: var(--shadow-sm), var(--highlight-top); }
+  .elevate-md { box-shadow: var(--shadow-md), var(--highlight-top); }
+  .elevate-lg { box-shadow: var(--shadow-lg), var(--highlight-top); }
+  .elevate-glow { box-shadow: var(--shadow-glow-soft), var(--highlight-top); }
+
+  .ambient-glow {
+    position: relative;
+    isolation: isolate;
+  }
+  .ambient-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(140deg, hsl(210 40% 100% / 0.12), transparent 40%, hsl(var(--primary) / 0.18) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.5s var(--ease-cinematic);
+  }
+  .ambient-glow:hover::before { opacity: 1; }
+
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--primary) / 0.5);
+  }
 
   a:hover, button:not(:disabled):hover .lucide {
-    transition: color 0.25s ease, filter 0.25s ease;
+    transition: color 0.3s var(--ease-soft), filter 0.3s var(--ease-soft);
   }
+
+  /* Smoother default scroll feel */
+  html { scroll-behavior: smooth; }
+
+  /* Refined scrollbars */
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(210 40% 100% / 0.08);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.35); background-clip: padding-box; }
 }
+
 
