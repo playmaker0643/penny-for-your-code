@@ -8,6 +8,10 @@ export default function BrandedLoader({ label = "Loading..." }: { label?: string
         <img
           src={logoAsset.url}
           alt="CodeBreakers"
+          width={80}
+          height={80}
+          decoding="async"
+          loading="lazy"
           className="relative h-20 w-20 rounded-2xl object-cover animate-pulse-neon"
         />
       </div>

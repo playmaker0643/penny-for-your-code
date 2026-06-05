@@ -30,6 +30,10 @@ const Navbar = () => {
           <img
             src={logoAsset.url}
             alt="CodeBreakers"
+            width={36}
+            height={36}
+            decoding="async"
+            fetchPriority="high"
             className="h-9 w-9 rounded-lg object-cover shadow-[0_0_18px_hsl(var(--primary)/0.45)]"
           />
           <span className="text-lg font-bold font-display text-foreground">
