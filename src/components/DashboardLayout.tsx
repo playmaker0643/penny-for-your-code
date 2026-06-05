@@ -90,7 +90,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-40 h-14 border-b border-border/50 bg-background/95 backdrop-blur-xl flex items-center justify-between px-4">
+      <header className="sticky top-0 z-40 h-14 glass-nav flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -213,7 +213,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="p-4">{children}</div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border/50">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 glass-nav">
         <div className="flex items-center justify-around h-16">
           {bottomTabs.map((tab) => {
             const active = isActive(tab.to);

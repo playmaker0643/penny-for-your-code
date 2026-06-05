@@ -57,7 +57,32 @@
   :root {
     --brand-gradient: linear-gradient(135deg, hsl(210 100% 56%) 0%, hsl(195 100% 50%) 100%);
     --brand-gradient-soft: linear-gradient(135deg, hsl(210 100% 56% / 0.18) 0%, hsl(195 100% 50% / 0.18) 100%);
-    --brand-gradient-bg: linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 8%) 100%);
+    --brand-gradient-bg:
+      radial-gradient(1200px 600px at 12% -10%, hsl(210 100% 56% / 0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, hsl(195 100% 50% / 0.08), transparent 55%),
+      radial-gradient(700px 600px at 50% 110%, hsl(210 100% 56% / 0.06), transparent 60%),
+      linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 8%) 100%);
+
+    /* Cinematic depth */
+    --shadow-xs: 0 1px 2px hsl(222 47% 2% / 0.4);
+    --shadow-sm: 0 2px 6px -1px hsl(222 47% 2% / 0.35), 0 1px 2px hsl(222 47% 2% / 0.25);
+    --shadow-md:
+      0 1px 1px hsl(222 47% 2% / 0.25),
+      0 4px 10px -2px hsl(222 47% 2% / 0.35),
+      0 12px 24px -8px hsl(222 47% 2% / 0.4);
+    --shadow-lg:
+      0 1px 1px hsl(222 47% 2% / 0.3),
+      0 10px 24px -8px hsl(222 47% 2% / 0.45),
+      0 30px 60px -20px hsl(222 47% 2% / 0.55);
+    --shadow-glow-soft: 0 0 0 1px hsl(var(--primary) / 0.06), 0 8px 30px -10px hsl(var(--primary) / 0.18);
+
+    /* Surface highlights */
+    --highlight-top: inset 0 1px 0 hsl(210 40% 100% / 0.06);
+    --highlight-edge: inset 0 0 0 1px hsl(210 40% 100% / 0.04);
+
+    /* Easing */
+    --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -71,11 +96,27 @@
     background: var(--brand-gradient-bg);
     background-attachment: fixed;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11", "kern";
+    letter-spacing: -0.005em;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+    letter-spacing: -0.022em;
+    line-height: 1.12;
+    font-feature-settings: "ss01", "kern", "calt";
   }
+  h1 { letter-spacing: -0.03em; }
+  p { line-height: 1.65; }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+    color: hsl(var(--foreground));
+  }
+
 
   /* Fix mobile keyboard not appearing on inputs */
   input, textarea, select, [contenteditable] {
@@ -116,16 +157,32 @@
   }
 
   .cyber-card {
-    background: linear-gradient(135deg, hsl(var(--surface-1) / 0.85), hsl(var(--surface-2) / 0.85));
-    border: 1px solid transparent;
-    border-image: var(--brand-gradient) 1;
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.08);
-    transition: background 0.35s ease, box-shadow 0.35s ease, transform 0.2s ease;
+    position: relative;
+    background:
+      linear-gradient(180deg, hsl(var(--surface-1) / 0.78), hsl(var(--surface-2) / 0.72));
+    border: 1px solid hsl(210 40% 100% / 0.06);
+    border-radius: var(--radius);
+    box-shadow:
+      var(--shadow-md),
+      var(--highlight-top),
+      var(--highlight-edge);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    transition:
+      transform 0.5s var(--ease-cinematic),
+      box-shadow 0.5s var(--ease-cinematic),
+      border-color 0.4s var(--ease-soft);
   }
   .cyber-card:hover {
-    box-shadow: 0 0 14px hsl(var(--primary) / 0.12);
-    transform: translateY(-1px);
+    border-color: hsl(var(--primary) / 0.22);
+    box-shadow:
+      var(--shadow-lg),
+      var(--highlight-top),
+      0 0 0 1px hsl(var(--primary) / 0.08),
+      0 12px 40px -12px hsl(var(--primary) / 0.18);
+    transform: translateY(-2px);
   }
+
 
   .cyber-gradient {
     background: var(--brand-gradient-soft);
@@ -143,19 +200,28 @@
     background-size: 200% 200% !important;
     background-position: 0% 50% !important;
     color: hsl(var(--primary-foreground)) !important;
-    box-shadow: 0 0 12px hsl(var(--primary) / 0.2);
-    transition: background-position 0.5s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    box-shadow:
+      0 1px 0 hsl(210 40% 100% / 0.12) inset,
+      0 8px 24px -8px hsl(var(--primary) / 0.45),
+      0 1px 2px hsl(222 47% 2% / 0.4);
+    transition:
+      background-position 0.7s var(--ease-cinematic),
+      box-shadow 0.45s var(--ease-cinematic),
+      transform 0.35s var(--ease-cinematic);
   }
 
   .glow-btn:hover {
     background-position: 100% 50% !important;
-    box-shadow: 0 0 16px hsl(var(--primary) / 0.28);
+    box-shadow:
+      0 1px 0 hsl(210 40% 100% / 0.18) inset,
+      0 14px 36px -10px hsl(var(--primary) / 0.55),
+      0 2px 4px hsl(222 47% 2% / 0.45);
     transform: translateY(-1px);
   }
 
   .hover-gradient {
     position: relative;
-    transition: color 0.3s ease, background 0.35s ease, box-shadow 0.35s ease, transform 0.2s ease;
+    transition: color 0.4s var(--ease-cinematic), background 0.45s var(--ease-cinematic), box-shadow 0.45s var(--ease-cinematic), transform 0.35s var(--ease-cinematic);
   }
   .hover-gradient:hover {
     background: var(--brand-gradient) !important;
@@ -170,15 +236,87 @@
   }
 
   .hover-gradient-border {
-    transition: border-color 0.3s ease, box-shadow 0.35s ease, transform 0.2s ease;
+    transition: border-color 0.4s var(--ease-soft), box-shadow 0.45s var(--ease-cinematic), transform 0.35s var(--ease-cinematic);
   }
   .hover-gradient-border:hover {
     border-image: var(--brand-gradient) 1;
   }
 
+  /* ---------- Premium surface system ---------- */
+
+  .glass-panel {
+    background: linear-gradient(180deg, hsl(222 45% 12% / 0.62), hsl(222 45% 10% / 0.55));
+    border: 1px solid hsl(210 40% 100% / 0.07);
+    box-shadow:
+      var(--shadow-md),
+      var(--highlight-top);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+  }
+
+  .glass-nav {
+    background: linear-gradient(180deg, hsl(222 47% 7% / 0.72), hsl(222 47% 7% / 0.55));
+    border-bottom: 1px solid hsl(210 40% 100% / 0.06);
+    box-shadow: 0 1px 0 hsl(210 40% 100% / 0.04) inset, 0 8px 24px -16px hsl(222 47% 2% / 0.6);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  }
+
+  .glass-overlay {
+    background: hsl(222 47% 5% / 0.55);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  .elevate-sm { box-shadow: var(--shadow-sm), var(--highlight-top); }
+  .elevate-md { box-shadow: var(--shadow-md), var(--highlight-top); }
+  .elevate-lg { box-shadow: var(--shadow-lg), var(--highlight-top); }
+  .elevate-glow { box-shadow: var(--shadow-glow-soft), var(--highlight-top); }
+
+  .ambient-glow {
+    position: relative;
+    isolation: isolate;
+  }
+  .ambient-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(140deg, hsl(210 40% 100% / 0.12), transparent 40%, hsl(var(--primary) / 0.18) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.5s var(--ease-cinematic);
+  }
+  .ambient-glow:hover::before { opacity: 1; }
+
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--primary) / 0.5);
+  }
 
   a:hover, button:not(:disabled):hover .lucide {
-    transition: color 0.25s ease, filter 0.25s ease;
+    transition: color 0.3s var(--ease-soft), filter 0.3s var(--ease-soft);
   }
+
+  /* Smoother default scroll feel */
+  html { scroll-behavior: smooth; }
+
+  /* Refined scrollbars */
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(210 40% 100% / 0.08);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.35); background-clip: padding-box; }
 }
+
 
