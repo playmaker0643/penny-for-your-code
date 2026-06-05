@@ -4,7 +4,7 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
-import logoAsset from "@/assets/codebreakers-logo.jpg.asset.json";
+const logoAsset = { url: "/codebreakers-logo.jpg" };
 
 
 const Navbar = () => {
