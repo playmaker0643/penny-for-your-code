@@ -1,0 +1,31 @@
+# =============================================================================
+# .dev.vars.example  — template for local Wrangler dev secrets
+# Copy to `.dev.vars` (gitignored) and fill in real values from your secret
+# manager. NEVER commit `.dev.vars`. NEVER paste real values into this file.
+# =============================================================================
+
+# --- Supabase (server-only) --------------------------------------------------
+# Service role key — bypasses RLS. Treat like a root DB password.
+SUPABASE_SERVICE_ROLE_KEY="REPLACE_ME"
+
+# Direct Postgres connection string (contains DB password).
+SUPABASE_DB_URL="postgresql://postgres:REPLACE_ME@db.<project-ref>.supabase.co:5432/postgres"
+
+# JWKS used for verifying Supabase-issued JWTs server-side.
+SUPABASE_JWKS="REPLACE_ME"
+
+# --- Lovable / AI Gateway ----------------------------------------------------
+LOVABLE_API_KEY="REPLACE_ME"
+
+# --- Firebase Cloud Messaging (FCM v1) --------------------------------------
+# Full service-account JSON as a single-line string.
+FIREBASE_SERVICE_ACCOUNT_JSON='{"type":"service_account","project_id":"REPLACE_ME","private_key":"REPLACE_ME", ...}'
+
+# --- Metered TURN/STUN -------------------------------------------------------
+METERED_APP_NAME="REPLACE_ME"
+METERED_TURN_API_KEY="REPLACE_ME"
+
+# --- reCAPTCHA ---------------------------------------------------------------
+RECAPTCHA_SECRET_KEY="REPLACE_ME"
+
+# Add any future secrets here with REPLACE_ME placeholders only.
