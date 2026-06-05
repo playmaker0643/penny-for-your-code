@@ -57,7 +57,32 @@
   :root {
     --brand-gradient: linear-gradient(135deg, hsl(210 100% 56%) 0%, hsl(195 100% 50%) 100%);
     --brand-gradient-soft: linear-gradient(135deg, hsl(210 100% 56% / 0.18) 0%, hsl(195 100% 50% / 0.18) 100%);
-    --brand-gradient-bg: linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 8%) 100%);
+    --brand-gradient-bg:
+      radial-gradient(1200px 600px at 12% -10%, hsl(210 100% 56% / 0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, hsl(195 100% 50% / 0.08), transparent 55%),
+      radial-gradient(700px 600px at 50% 110%, hsl(210 100% 56% / 0.06), transparent 60%),
+      linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 8%) 100%);
+
+    /* Cinematic depth */
+    --shadow-xs: 0 1px 2px hsl(222 47% 2% / 0.4);
+    --shadow-sm: 0 2px 6px -1px hsl(222 47% 2% / 0.35), 0 1px 2px hsl(222 47% 2% / 0.25);
+    --shadow-md:
+      0 1px 1px hsl(222 47% 2% / 0.25),
+      0 4px 10px -2px hsl(222 47% 2% / 0.35),
+      0 12px 24px -8px hsl(222 47% 2% / 0.4);
+    --shadow-lg:
+      0 1px 1px hsl(222 47% 2% / 0.3),
+      0 10px 24px -8px hsl(222 47% 2% / 0.45),
+      0 30px 60px -20px hsl(222 47% 2% / 0.55);
+    --shadow-glow-soft: 0 0 0 1px hsl(var(--primary) / 0.06), 0 8px 30px -10px hsl(var(--primary) / 0.18);
+
+    /* Surface highlights */
+    --highlight-top: inset 0 1px 0 hsl(210 40% 100% / 0.06);
+    --highlight-edge: inset 0 0 0 1px hsl(210 40% 100% / 0.04);
+
+    /* Easing */
+    --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
