@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import LessonContent from "@/components/lessons/LessonContent";
 
 
 const StudentCourseLessons = () => {

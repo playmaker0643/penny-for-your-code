@@ -2,6 +2,7 @@ import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Play, Lock, CheckCircle, Unlock, Bot, Send, X, Trophy, Target } from "lucide-react";
 import LessonPracticals from "@/components/lessons/LessonPracticals";
+import LessonContent from "@/components/lessons/LessonContent";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -376,11 +377,9 @@ const StudentLessons = () => {
                   <a href={activeLesson.video_url} target="_blank" rel="noreferrer" className="text-xs text-primary font-mono break-all">{activeLesson.video_url}</a>
                 </div>
               )}
-              {activeLesson?.content_html ? (
-                <div className="prose prose-sm prose-invert max-w-none bg-muted p-3 rounded-lg" dangerouslySetInnerHTML={{ __html: activeLesson.content_html }} />
-              ) : activeLesson?.content ? (
-                <div className="text-sm text-foreground whitespace-pre-wrap bg-muted p-3 rounded-lg">{activeLesson.content}</div>
-              ) : null}
+              <div className="bg-muted/30 p-3 rounded-lg">
+                <LessonContent html={activeLesson?.content_html} text={activeLesson?.content} />
+              </div>
 
               {activeLesson && practicalsCountFor(activeLesson.id).length > 0 && (
                 <Button onClick={() => setShowPracticals(true)} variant="outline"
