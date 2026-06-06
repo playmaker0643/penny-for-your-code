@@ -1,39 +1,22 @@
-/* Minimal app-shell service worker to make the site installable as a PWA.
- * Keeps logic tiny: network-first for navigations, passthrough for the rest.
+/* Minimal app-shell service worker for PWA installability.
+ * Intentionally does NOT cache navigations — that previously caused stale
+ * HTML / dead-chunk loading screens and broke auth state after deploys.
  * The Firebase Messaging SW (firebase-messaging-sw.js) handles push separately.
  */
-const CACHE = "cb-shell-v1";
+const CACHE = "cb-shell-v3";
 
-self.addEventListener("install", (e) => {
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil((async () => {
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    // Drop any previously cached shells so stale HTML can't be served.
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    await Promise.all(keys.map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
 
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  if (req.method !== "GET") return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
-
-  if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      try {
-        const fresh = await fetch(req);
-        const cache = await caches.open(CACHE);
-        cache.put("/", fresh.clone()).catch(() => {});
-        return fresh;
-      } catch {
-        const cache = await caches.open(CACHE);
-        const cached = await cache.match("/");
-        return cached || Response.error();
-      }
-    })());
-  }
-});
+// Pass-through fetch — no caching of navigations or assets.
+self.addEventListener("fetch", () => {});
