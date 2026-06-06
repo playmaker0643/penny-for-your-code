@@ -289,11 +289,7 @@ const StudentCourseLessons = () => {
             </div>
           )}
 
-          {activeLesson.content_html ? (
-            <div className="prose prose-sm prose-invert max-w-none [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-card [&_pre]:p-4 [&_code]:font-mono [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6" dangerouslySetInnerHTML={{ __html: activeLesson.content_html }} />
-          ) : activeLesson.content ? (
-            <div className="text-sm text-foreground whitespace-pre-wrap">{activeLesson.content}</div>
-          ) : null}
+          <LessonContent html={activeLesson.content_html} text={activeLesson.content} />
 
           {!isCompleted(activeLesson?.id) && (
             <div className="space-y-2">
