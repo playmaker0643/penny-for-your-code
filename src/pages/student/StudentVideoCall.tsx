@@ -1,3 +1,4 @@
+import ChallengeButton from "@/components/call/ChallengeButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -359,9 +360,7 @@ const StudentVideoCall = () => {
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      <button onClick={sendChallengeInvite} className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs">
-        <Swords className="h-4 w-4" /> Challenge
-      </button>
+      <ChallengeButton onChallenge={sendChallengeInvite} className="absolute top-4 left-4 z-10" />
 
       <div className="flex-1 relative">
         <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />

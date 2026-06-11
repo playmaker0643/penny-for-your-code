@@ -1,3 +1,4 @@
+import ChallengeButton from "@/components/call/ChallengeButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -391,9 +392,7 @@ const StudentVoiceCall = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "linear-gradient(180deg, hsl(var(--primary)/0.9) 0%, hsl(var(--background)) 100%)" }}>
-      <button onClick={sendChallengeInvite} className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-black/30 backdrop-blur-sm text-white px-3 py-2 rounded-full text-xs">
-        <Swords className="h-4 w-4" /> Challenge
-      </button>
+      <ChallengeButton onChallenge={sendChallengeInvite} className="absolute top-4 left-4 z-10" />
 
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className={`w-32 h-32 rounded-full overflow-hidden border-4 mb-6 ${callStatus === "active" ? "border-green-400 shadow-[0_0_30px_rgba(74,222,128,0.3)]" : "border-white/30"}`}>
